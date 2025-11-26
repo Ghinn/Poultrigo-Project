@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Activity,
   Lock,
@@ -14,22 +14,79 @@ import {
   User,
 } from "lucide-react";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
+import {
+  getUserByEmail,
+  setCurrentUser,
+  initializeDemoUsers,
+} from "@/utils/auth";
 
 type RoleOption = "guest" | "operator" | "admin";
 
 export function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<RoleOption>("operator");
+  const [selectedRole, setSelectedRole] = useState<RoleOption>("guest");
+  const [error, setError] = useState("");
+  const registered = searchParams?.get("registered") === "true";
+  const successMessage = registered
+    ? "Registrasi berhasil! Silakan masuk dengan akun Anda."
+    : "";
+
+  // Initialize demo users on mount
+  useEffect(() => {
+    initializeDemoUsers();
+  }, []);
+
+  // Auto-detect role when email changes
+  useEffect(() => {
+    if (email.trim()) {
+      const user = getUserByEmail(email);
+      if (user) {
+        setSelectedRole(user.role);
+      }
+    }
+  }, [email]);
 
   const handleLogin = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
+
+    // Cari user berdasarkan email
+    const user = getUserByEmail(email);
+
+    if (!user) {
+      setError("Email atau kata sandi salah.");
+      return;
+    }
+
+    // Verifikasi password
+    if (user.password !== password) {
+      setError("Email atau kata sandi salah.");
+      return;
+    }
+
+    // Verifikasi role - gunakan role dari database (bisa diubah oleh admin)
+    // Dropdown hanya untuk informasi, role sebenarnya diambil dari database
+    if (user.role !== selectedRole) {
+      // Jika role tidak cocok, update dropdown dengan role sebenarnya dari database
+      setSelectedRole(user.role);
+      setError(
+        `Anda memiliki akses sebagai ${user.role === "admin" ? "Admin Developer" : user.role === "operator" ? "Operator Kandang" : "Guest/Pembeli"}. Silakan coba login lagi.`
+      );
+      return;
+    }
+
+    // Simpan user yang login (dengan role dari database)
+    setCurrentUser(user);
+
+    // Redirect ke dashboard sesuai role dari database
     const nextPath =
-      selectedRole === "admin"
+      user.role === "admin"
         ? "/admin"
-        : selectedRole === "operator"
+        : user.role === "operator"
           ? "/operator"
           : "/guest";
 
@@ -38,25 +95,28 @@ export function LoginPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#001B34] via-[#002952] to-[#001B34]">
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute left-1/4 top-1/4 h-96 w-96 animate-pulse rounded-full bg-orange-500 blur-3xl" />
+      <div className="pointer-events-none absolute inset-0 opacity-10">
+        <div className="absolute left-1/4 top-1/4 h-64 w-64 animate-pulse rounded-full bg-orange-500 blur-3xl sm:h-96 sm:w-96" />
         <div
-          className="absolute bottom-1/4 right-1/4 h-96 w-96 animate-pulse rounded-full bg-red-500 blur-3xl"
+          className="absolute bottom-1/4 right-1/4 h-64 w-64 animate-pulse rounded-full bg-red-500 blur-3xl sm:h-96 sm:w-96"
           style={{ animationDelay: "1s" }}
         />
       </div>
 
-      <button
-        type="button"
-        onClick={() => router.push("/")}
-        className="absolute left-8 top-8 z-10 flex items-center gap-2 text-white/70 transition-colors hover:text-white"
-      >
-        <ArrowLeft className="h-5 w-5" />
-        Kembali ke Beranda
-      </button>
+      <div className="relative z-10 flex items-center justify-between px-4 pt-4 text-white sm:px-6 sm:pt-6">
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/30 px-3 py-1.5 text-xs text-white/80 backdrop-blur-md transition hover:bg-white/15 hover:text-white sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">Kembali ke Beranda</span>
+          <span className="sm:hidden">Kembali</span>
+        </button>
+      </div>
 
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12">
-        <div className="grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2">
+      <div className="relative z-10 flex min-h-[calc(100vh-80px)] items-center justify-center px-4 pb-8 sm:min-h-[calc(100vh-96px)] sm:px-6 sm:pb-12">
+        <div className="grid w-full max-w-6xl items-center gap-8 lg:grid-cols-2 lg:gap-12">
           <div className="hidden space-y-6 text-white lg:block">
             <div className="mb-8 flex items-center gap-3">
               <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-2xl">
@@ -103,14 +163,47 @@ export function LoginPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white p-8 shadow-2xl lg:p-12">
+          <div className="relative z-20 rounded-2xl bg-white p-8 shadow-2xl lg:p-12" style={{ pointerEvents: "auto" }}>
             <div className="mb-8">
               <h2 className="mb-2 text-3xl text-[#001B34]">Masuk</h2>
               <p className="text-slate-600">
                 Gunakan kredensial akun Poultrigo Anda
               </p>
             </div>
-            <form className="space-y-6" onSubmit={handleLogin}>
+
+            {successMessage && (
+              <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
+                <p className="text-sm text-green-800">{successMessage}</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
+            <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <p className="mb-2 text-sm font-semibold text-blue-900">
+                Akun Demo (Untuk Testing):
+              </p>
+              <div className="space-y-2 text-xs text-blue-800">
+                <div>
+                  <strong>Admin:</strong> admin@poultrigo.com / admin123
+                </div>
+                <div>
+                  <strong>Operator:</strong> operator@poultrigo.com / operator123
+                </div>
+                <div>
+                  <strong>Guest:</strong> guest@poultrigo.com / guest123
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-blue-700">
+                ⚠️ Pilih role yang sesuai di dropdown sebelum login!
+              </p>
+            </div>
+
+            <form className="relative z-30 space-y-6" onSubmit={handleLogin}>
               <div>
                 <label className="mb-2 block text-sm text-slate-600">
                   Pilih peran
@@ -119,7 +212,7 @@ export function LoginPage() {
                   <select
                     value={selectedRole}
                     onChange={(e) => setSelectedRole(e.target.value as RoleOption)}
-                    className="w-full appearance-none rounded-lg border-2 border-slate-200 px-4 py-3 focus:border-orange-500 focus:outline-none"
+                    className="w-full appearance-none rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-base text-slate-900 focus:border-orange-500 focus:outline-none"
                   >
                     <option value="guest">Guest / Pembeli</option>
                     <option value="operator">Operator Kandang</option>
@@ -184,7 +277,7 @@ export function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="nama@perusahaan.com"
-                    className="w-full rounded-lg border-2 border-slate-200 py-3 pl-12 pr-4 focus:border-orange-500 focus:outline-none"
+                    className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 pl-12 pr-4 text-base text-slate-900 placeholder:text-slate-400 caret-orange-500 focus:border-orange-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -201,7 +294,7 @@ export function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Masukkan kata sandi"
-                    className="w-full rounded-lg border-2 border-slate-200 py-3 pl-12 pr-12 focus:border-orange-500 focus:outline-none"
+                    className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 pl-12 pr-12 text-base text-slate-900 placeholder:text-slate-400 caret-orange-500 focus:border-orange-500 focus:outline-none"
                   />
                   <button
                     type="button"

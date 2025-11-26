@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Shield,
@@ -12,29 +12,90 @@ import {
   Server,
   LogOut,
   Search,
-  Filter,
   Plus,
   Edit,
   Trash2,
   Eye,
+  EyeOff,
   RefreshCw,
   Terminal,
   Cpu,
   HardDrive,
   Wifi,
+  X,
+  Mail,
+  Phone,
+  Lock,
+  User as UserIcon,
+  Save,
+  Bell,
+  Download,
+  Upload,
+  Globe,
+  Key,
+  ShieldCheck,
+  Menu,
+  Newspaper,
 } from "lucide-react";
+import {
+  getUsers,
+  saveUser,
+  updateUser,
+  deleteUser,
+  logout,
+  type User,
+} from "@/utils/auth";
+import { NewsManagement } from "./news-management";
+
+type ModalMode = "create" | "edit" | "view" | null;
 
 export function AdminDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "sensors" | "system" | "logs"
+    "overview" | "users" | "news" | "sensors" | "system" | "logs"
   >("overview");
+
+  // User management state
+  const [users, setUsers] = useState<User[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "operator" | "guest">("all");
+  const [modalMode, setModalMode] = useState<ModalMode>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    role: "guest" as "guest" | "operator" | "admin",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Load users from localStorage
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = () => {
+    const allUsers = getUsers();
+    setUsers(allUsers);
+  };
+
+  // Filter users
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   const stats = [
     {
       label: "Total Pengguna",
-      value: "24",
-      change: "+3",
+      value: users.length.toString(),
+      change: `+${users.filter((u) => new Date(u.createdAt) > new Date(Date.now() - 86400000)).length}`,
       icon: Users,
       color: "text-orange-500",
       bgColor: "bg-orange-500",
@@ -65,40 +126,152 @@ export function AdminDashboard() {
     },
   ];
 
-  const users = [
-    {
-      id: 1,
-      name: "Ahmad Operator",
-      email: "ahmad@farm1.com",
-      role: "Operator",
-      status: "Aktif",
-      lastLogin: "2 menit lalu",
-    },
-    {
-      id: 2,
-      name: "Budi Operator",
-      email: "budi@farm2.com",
-      role: "Operator",
-      status: "Aktif",
-      lastLogin: "15 menit lalu",
-    },
-    {
-      id: 3,
-      name: "Siti Guest",
-      email: "siti@email.com",
-      role: "Guest",
-      status: "Aktif",
-      lastLogin: "1 jam lalu",
-    },
-    {
-      id: 4,
-      name: "Deni Admin",
-      email: "deni@poultrigo.com",
-      role: "Admin",
-      status: "Aktif",
-      lastLogin: "5 jam lalu",
-    },
-  ];
+  // CRUD Functions
+  const handleOpenCreate = () => {
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      role: "guest",
+    });
+    setSelectedUser(null);
+    setModalMode("create");
+    setError("");
+  };
+
+  const handleOpenEdit = (user: User) => {
+    setFormData({
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      password: "",
+      role: user.role,
+    });
+    setSelectedUser(user);
+    setModalMode("edit");
+    setError("");
+  };
+
+  const handleOpenView = (user: User) => {
+    setSelectedUser(user);
+    setModalMode("view");
+  };
+
+  const handleCloseModal = () => {
+    setModalMode(null);
+    setSelectedUser(null);
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      role: "guest",
+    });
+    setError("");
+  };
+
+  const handleSave = () => {
+    setError("");
+
+    if (!formData.name.trim()) {
+      setError("Nama lengkap wajib diisi");
+      return;
+    }
+    if (!formData.email.trim()) {
+      setError("Email wajib diisi");
+      return;
+    }
+    if (!formData.phone.trim()) {
+      setError("Nomor telepon wajib diisi");
+      return;
+    }
+    if (modalMode === "create" && !formData.password.trim()) {
+      setError("Kata sandi wajib diisi");
+      return;
+    }
+    if (modalMode === "create" && formData.password.length < 8) {
+      setError("Kata sandi minimal 8 karakter");
+      return;
+    }
+
+    if (modalMode === "create") {
+      const existingUser = users.find(
+        (u) => u.email.toLowerCase() === formData.email.toLowerCase()
+      );
+      if (existingUser) {
+        setError("Email sudah terdaftar");
+        return;
+      }
+      saveUser({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        role: formData.role,
+      });
+    } else if (modalMode === "edit" && selectedUser) {
+      const updateData: Partial<Omit<User, "id" | "createdAt">> = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role,
+      };
+      if (formData.password.trim()) {
+        if (formData.password.length < 8) {
+          setError("Kata sandi minimal 8 karakter");
+          return;
+        }
+        updateData.password = formData.password;
+      }
+      if (formData.email.toLowerCase() !== selectedUser.email.toLowerCase()) {
+        const existingUser = users.find(
+          (u) => u.email.toLowerCase() === formData.email.toLowerCase()
+        );
+        if (existingUser) {
+          setError("Email sudah terdaftar");
+          return;
+        }
+      }
+      updateUser(selectedUser.id, updateData);
+    }
+
+    loadUsers();
+    handleCloseModal();
+  };
+
+  const handleDelete = (userId: string) => {
+    if (confirm("Apakah Anda yakin ingin menghapus pengguna ini?")) {
+      deleteUser(userId);
+      loadUsers();
+      if (selectedUser?.id === userId) {
+        handleCloseModal();
+      }
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diffInSeconds < 60) return "Baru saja";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} menit lalu`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} jam lalu`;
+    return date.toLocaleDateString("id-ID");
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "Admin Developer";
+      case "operator":
+        return "Operator Kandang";
+      case "guest":
+        return "Guest / Pembeli";
+      default:
+        return role;
+    }
+  };
 
   const sensors = [
     {
@@ -163,39 +336,50 @@ export function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#001B34] to-[#003561]">
-                <Shield className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <div className="text-[#001B34]">Admin Developer</div>
-                <div className="text-sm text-slate-500">
-                  Panel Pengelolaan Sistem
+    <div className="flex min-h-screen bg-slate-50">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed left-0 top-0 z-50 h-screen w-64 bg-gradient-to-b from-orange-500 to-orange-600 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex h-full flex-col">
+          {/* Logo/Brand */}
+          <div className="border-b border-orange-400/30 p-4 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <div className="font-semibold text-white">Poultrigo</div>
+                  <div className="text-xs text-orange-100">Admin Developer</div>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="rounded-lg p-1.5 text-white transition-colors hover:bg-white/20 lg:hidden"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => router.push("/")}
-              className="flex items-center gap-2 rounded-lg px-4 py-2 text-slate-600 transition-colors hover:text-red-600"
-            >
-              <LogOut className="h-5 w-5" />
-              Keluar
-            </button>
           </div>
-        </div>
-      </header>
 
-      <div className="border-b border-slate-200 bg-white">
-        <div className="px-6">
-          <div className="flex gap-8">
+          {/* Navigation Menu */}
+          <nav className="flex-1 space-y-1 overflow-y-auto p-3 sm:p-4">
             {[
-              { id: "overview", label: "Ikhtisar", icon: Activity },
+              { id: "overview", label: "Beranda", icon: Activity },
               { id: "users", label: "Kelola Pengguna", icon: Users },
+              { id: "news", label: "Kelola Berita", icon: Newspaper },
               { id: "sensors", label: "Konfigurasi Sensor", icon: Wifi },
               { id: "system", label: "Pengaturan Sistem", icon: Settings },
               { id: "logs", label: "Log Sistem", icon: Terminal },
@@ -203,22 +387,86 @@ export function AdminDashboard() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex items-center gap-2 border-b-2 px-4 py-4 transition-colors ${
+                onClick={() => {
+                  setActiveTab(tab.id as typeof activeTab);
+                  setSidebarOpen(false);
+                }}
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors sm:px-4 sm:py-3 ${
                   activeTab === tab.id
-                    ? "border-[#001B34] text-[#001B34]"
-                    : "border-transparent text-slate-500 hover:text-slate-700"
+                    ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
+                    : "text-orange-50 hover:bg-white/10 hover:text-white"
                 }`}
               >
-                <tab.icon className="h-5 w-5" />
-                {tab.label}
+                <tab.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="font-medium">{tab.label}</span>
               </button>
             ))}
+          </nav>
+
+          {/* Logout Button */}
+          <div className="border-t border-orange-400/30 p-4">
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                router.push("/");
+              }}
+              className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-orange-50 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="font-medium">Keluar</span>
+            </button>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <div className="p-6">
+      {/* Main Content */}
+      <div className="lg:ml-64 flex-1">
+        {/* Header */}
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
+          <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 lg:hidden"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <div>
+                <h1 className="text-lg font-semibold text-[#001B34] sm:text-xl">
+                  {activeTab === "overview" && "Beranda"}
+                  {activeTab === "users" && "Kelola Pengguna"}
+                  {activeTab === "news" && "Kelola Berita"}
+                  {activeTab === "sensors" && "Konfigurasi Sensor"}
+                  {activeTab === "system" && "Pengaturan Sistem"}
+                  {activeTab === "logs" && "Log Sistem"}
+                </h1>
+                <p className="hidden text-xs text-slate-500 sm:block sm:text-sm">
+                  {activeTab === "overview" && "Ringkasan sistem dan aktivitas"}
+                  {activeTab === "users" && "Atur dan pantau seluruh akun pengguna sistem"}
+                  {activeTab === "news" && "Kelola artikel berita dan publikasi"}
+                  {activeTab === "sensors" && "Kelola dan konfigurasi sensor IoT"}
+                  {activeTab === "system" && "Konfigurasi dan pengaturan sistem Poultrigo"}
+                  {activeTab === "logs" && "Pemantauan aktivitas sistem secara real-time"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                className="relative rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100"
+                title="Notifikasi"
+              >
+                <Bell className="h-5 w-5" />
+                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <div className="p-4 sm:p-6">
         {activeTab === "overview" && (
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -353,15 +601,10 @@ export function AdminDashboard() {
 
         {activeTab === "users" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl text-[#001B34]">Kelola Pengguna</h2>
-                <p className="text-slate-600">
-                  Atur dan pantau seluruh akun pengguna sistem
-                </p>
-              </div>
+            <div className="flex items-center justify-end">
               <button
                 type="button"
+                onClick={handleOpenCreate}
                 className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-white transition-all hover:shadow-lg"
               >
                 <Plus className="h-5 w-5" />
@@ -376,16 +619,21 @@ export function AdminDashboard() {
                   <input
                     type="text"
                     placeholder="Cari pengguna..."
-                    className="w-full rounded-lg border border-slate-200 py-2 pl-10 pr-4 focus:border-[#001B34] focus:outline-none"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-base text-slate-900 focus:border-[#001B34] focus:outline-none"
                   />
                 </div>
-                <button
-                  type="button"
-                  className="ml-4 flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 hover:bg-slate-50"
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
+                  className="ml-4 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 focus:border-[#001B34] focus:outline-none"
                 >
-                  <Filter className="h-5 w-5 text-slate-600" />
-                  Saring
-                </button>
+                  <option value="all">Semua Peran</option>
+                  <option value="admin">Admin Developer</option>
+                  <option value="operator">Operator Kandang</option>
+                  <option value="guest">Guest / Pembeli</option>
+                </select>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -394,9 +642,9 @@ export function AdminDashboard() {
                       {[
                         "Nama",
                         "Email",
+                        "Telepon",
                         "Peran",
-                        "Status",
-                        "Login Terakhir",
+                        "Tanggal Dibuat",
                         "Aksi",
                       ].map((header) => (
                         <th
@@ -409,60 +657,71 @@ export function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {users.map((user) => (
-                      <tr key={user.id} className="hover:bg-slate-50">
-                        <td className="px-6 py-4 text-sm text-[#001B34]">
-                          {user.name}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {user.email}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs ${
-                              user.role === "Admin"
-                                ? "bg-[#001B34] text-white"
-                                : user.role === "Operator"
-                                  ? "bg-orange-100 text-orange-700"
-                                  : "bg-slate-100 text-slate-700"
-                            }`}
-                          >
-                            {user.role}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center gap-1.5 text-sm text-green-600">
-                            <span className="h-2 w-2 rounded-full bg-green-500" />
-                            {user.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {user.lastLogin}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              className="rounded p-1.5 text-blue-600 hover:bg-blue-50"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              className="rounded p-1.5 text-orange-600 hover:bg-orange-50"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              className="rounded p-1.5 text-red-600 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
+                    {filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-8 text-center text-sm text-slate-500">
+                          Tidak ada pengguna yang ditemukan
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredUsers.map((user) => (
+                        <tr key={user.id} className="hover:bg-slate-50">
+                          <td className="px-6 py-4 text-sm text-[#001B34]">
+                            {user.name}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-600">
+                            {user.email}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-600">
+                            {user.phone}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex rounded-full px-3 py-1 text-xs ${
+                                user.role === "admin"
+                                  ? "bg-[#001B34] text-white"
+                                  : user.role === "operator"
+                                    ? "bg-orange-100 text-orange-700"
+                                    : "bg-slate-100 text-slate-700"
+                              }`}
+                            >
+                              {getRoleLabel(user.role)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-600">
+                            {formatDate(user.createdAt)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenView(user)}
+                                className="rounded p-1.5 text-blue-600 hover:bg-blue-50"
+                                title="Lihat Detail"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEdit(user)}
+                                className="rounded p-1.5 text-orange-600 hover:bg-orange-50"
+                                title="Edit Pengguna"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(user.id)}
+                                className="rounded p-1.5 text-red-600 hover:bg-red-50"
+                                title="Hapus Pengguna"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -470,13 +729,11 @@ export function AdminDashboard() {
           </div>
         )}
 
+        {activeTab === "news" && <NewsManagement />}
+
         {activeTab === "sensors" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl text-[#001B34]">Konfigurasi Sensor</h2>
-                <p className="text-slate-600">Kelola dan konfigurasi sensor IoT</p>
-              </div>
+            <div className="flex items-center justify-end">
               <button
                 type="button"
                 className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-white transition-all hover:shadow-lg"
@@ -541,15 +798,262 @@ export function AdminDashboard() {
           </div>
         )}
 
+        {activeTab === "system" && (
+          <div className="space-y-6">
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Pengaturan Umum */}
+              <div className="rounded-xl border border-slate-200 bg-white p-6">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+                    <Settings className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#001B34]">
+                      Pengaturan Umum
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      Konfigurasi dasar sistem
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <div className="font-medium text-[#001B34]">Nama Sistem</div>
+                      <div className="text-sm text-slate-500">Poultrigo IoT Platform</div>
+                    </div>
+                    <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <div className="font-medium text-[#001B34]">Zona Waktu</div>
+                      <div className="text-sm text-slate-500">Asia/Jakarta (WIB)</div>
+                    </div>
+                    <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <div className="font-medium text-[#001B34]">Bahasa Default</div>
+                      <div className="text-sm text-slate-500">Bahasa Indonesia</div>
+                    </div>
+                    <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notifikasi & Alert */}
+              <div className="rounded-xl border border-slate-200 bg-white p-6">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
+                    <Bell className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#001B34]">
+                      Notifikasi & Alert
+                    </h3>
+                    <p className="text-sm text-slate-500">Konfigurasi peringatan sistem</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <div className="font-medium text-[#001B34]">Email Notifikasi</div>
+                      <div className="text-sm text-slate-500">Kirim peringatan via email</div>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input type="checkbox" className="peer sr-only" defaultChecked />
+                      <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-orange-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <div className="font-medium text-[#001B34]">Peringatan Sensor Offline</div>
+                      <div className="text-sm text-slate-500">Alert jika sensor mati</div>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input type="checkbox" className="peer sr-only" defaultChecked />
+                      <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-orange-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Backup & Restore */}
+              <div className="rounded-xl border border-slate-200 bg-white p-6">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+                    <Download className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#001B34]">Backup & Restore</h3>
+                    <p className="text-sm text-slate-500">Cadangan data sistem</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="font-medium text-[#001B34]">Backup Terakhir</div>
+                      <span className="text-xs text-green-600">Berhasil</span>
+                    </div>
+                    <div className="text-sm text-slate-500">
+                      {new Date().toLocaleString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:shadow-lg">
+                      <Download className="mr-2 inline h-4 w-4" />
+                      Buat Backup
+                    </button>
+                    <button type="button" className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                      <Database className="mr-2 inline h-4 w-4" />
+                      Restore
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <div className="font-medium text-[#001B34]">Auto Backup Harian</div>
+                      <div className="text-sm text-slate-500">Setiap pukul 02:00 WIB</div>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input type="checkbox" className="peer sr-only" defaultChecked />
+                      <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Keamanan */}
+              <div className="rounded-xl border border-slate-200 bg-white p-6">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
+                    <ShieldCheck className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#001B34]">Keamanan Sistem</h3>
+                    <p className="text-sm text-slate-500">Pengaturan keamanan dan akses</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <div className="font-medium text-[#001B34]">Two-Factor Authentication</div>
+                      <div className="text-sm text-slate-500">Tambah lapisan keamanan</div>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input type="checkbox" className="peer sr-only" />
+                      <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-red-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <div className="font-medium text-[#001B34]">Session Timeout</div>
+                      <div className="text-sm text-slate-500">30 menit</div>
+                    </div>
+                    <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Integrasi API */}
+              <div className="rounded-xl border border-slate-200 bg-white p-6">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
+                    <Globe className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#001B34]">Integrasi API</h3>
+                    <p className="text-sm text-slate-500">Konfigurasi API endpoint</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div className="mb-2 text-sm font-medium text-[#001B34]">API Base URL</div>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 rounded bg-white px-3 py-2 text-sm text-slate-600">
+                        https://api.poultrigo.com/v1
+                      </code>
+                      <button type="button" className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <div className="font-medium text-[#001B34]">API Key</div>
+                      <div className="text-sm text-slate-500">••••••••••••••••••</div>
+                    </div>
+                    <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
+                      <Key className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Konfigurasi Sensor */}
+              <div className="rounded-xl border border-slate-200 bg-white p-6">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
+                    <Activity className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#001B34]">Konfigurasi Sensor</h3>
+                    <p className="text-sm text-slate-500">Pengaturan interval pembacaan sensor</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <div className="font-medium text-[#001B34]">Interval Pembacaan</div>
+                      <div className="text-sm text-slate-500">5 detik</div>
+                    </div>
+                    <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <div className="font-medium text-[#001B34]">Timeout Sensor</div>
+                      <div className="text-sm text-slate-500">30 detik</div>
+                    </div>
+                    <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3">
+              <button type="button" className="rounded-lg border border-slate-200 px-6 py-2.5 text-slate-600 transition-all hover:bg-slate-50">
+                Batal
+              </button>
+              <button type="button" className="rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-2.5 font-medium text-white transition-all hover:shadow-lg">
+                <Save className="mr-2 inline h-4 w-4" />
+                Simpan Perubahan
+              </button>
+            </div>
+          </div>
+        )}
+
         {activeTab === "logs" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl text-[#001B34]">Log Sistem</h2>
-                <p className="text-slate-600">
-                  Pemantauan aktivitas sistem secara real-time
-                </p>
-              </div>
+            <div className="flex items-center justify-end">
               <button
                 type="button"
                 className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 hover:bg-slate-50"
@@ -587,6 +1091,240 @@ export function AdminDashboard() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Modal Create/Edit/View User */}
+      {modalMode && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+              <h3 className="text-xl font-semibold text-[#001B34]">
+                {modalMode === "create"
+                  ? "Tambah Pengguna Baru"
+                  : modalMode === "edit"
+                    ? "Edit Pengguna"
+                    : "Detail Pengguna"}
+              </h3>
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-y-auto p-6">
+              {modalMode === "view" && selectedUser ? (
+                <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">Nama Lengkap</label>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-[#001B34]">
+                        {selectedUser.name}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">Email</label>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-[#001B34]">
+                        {selectedUser.email}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">Nomor Telepon</label>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-[#001B34]">
+                        {selectedUser.phone}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">Peran</label>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs ${
+                            selectedUser.role === "admin"
+                              ? "bg-[#001B34] text-white"
+                              : selectedUser.role === "operator"
+                                ? "bg-orange-100 text-orange-700"
+                                : "bg-slate-100 text-slate-700"
+                          }`}
+                        >
+                          {getRoleLabel(selectedUser.role)}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">Tanggal Dibuat</label>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-[#001B34]">
+                        {new Date(selectedUser.createdAt).toLocaleString("id-ID")}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">ID Pengguna</label>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-500">
+                        {selectedUser.id}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(selectedUser)}
+                      className="flex-1 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-white transition-all hover:shadow-lg"
+                    >
+                      Edit Pengguna
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(selectedUser.id)}
+                      className="flex-1 rounded-lg border border-red-500 bg-white px-4 py-2.5 text-red-600 transition-all hover:bg-red-50"
+                    >
+                      Hapus Pengguna
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSave();
+                  }}
+                  className="space-y-4"
+                >
+                  {error && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                      <p className="text-sm text-red-800">{error}</p>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="mb-2 block text-sm text-slate-600">
+                      Nama Lengkap <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <UserIcon className="pointer-events-none absolute left-4 top-1/2 z-40 h-5 w-5 -translate-y-1/2 text-slate-500" />
+                      <input
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="Masukkan nama lengkap"
+                        className="relative z-30 w-full rounded-lg border-2 border-slate-200 bg-white py-3 pl-12 pr-4 text-base text-slate-900 placeholder:text-slate-400 caret-orange-500 focus:border-orange-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm text-slate-600">
+                      Alamat Email <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="nama@perusahaan.com"
+                        className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 pl-12 pr-4 text-base text-slate-900 placeholder:text-slate-400 caret-orange-500 focus:border-orange-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm text-slate-600">
+                      Nomor Telepon <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="tel"
+                        required
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="+62 xxx xxxx xxxx"
+                        className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 pl-12 pr-4 text-base text-slate-900 placeholder:text-slate-400 caret-orange-500 focus:border-orange-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm text-slate-600">
+                      Peran <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.role}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          role: e.target.value as "guest" | "operator" | "admin",
+                        })
+                      }
+                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-base text-slate-900 focus:border-orange-500 focus:outline-none"
+                    >
+                      <option value="guest">Guest / Pembeli</option>
+                      <option value="operator">Operator Kandang</option>
+                      <option value="admin">Admin Developer</option>
+                    </select>
+                    <p className="mt-2 text-xs text-slate-500">
+                      Peran menentukan akses pengguna ke fitur sistem
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm text-slate-600">
+                      Kata Sandi{" "}
+                      {modalMode === "create" ? (
+                        <span className="text-red-500">*</span>
+                      ) : (
+                        <span className="text-slate-400">(Kosongkan jika tidak diubah)</span>
+                      )}
+                    </label>
+                    <div className="relative">
+                      <Lock className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required={modalMode === "create"}
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        placeholder={
+                          modalMode === "create"
+                            ? "Minimal 8 karakter"
+                            : "Kosongkan jika tidak ingin mengubah"
+                        }
+                        className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 pl-12 pr-12 text-base text-slate-900 placeholder:text-slate-400 caret-orange-500 focus:border-orange-500 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-slate-700 transition-all hover:bg-slate-50"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-white transition-all hover:shadow-lg"
+                    >
+                      <Save className="mr-2 inline h-4 w-4" />
+                      {modalMode === "create" ? "Tambah Pengguna" : "Simpan Perubahan"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
