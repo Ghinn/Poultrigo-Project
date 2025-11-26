@@ -1,327 +1,842 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Activity,
   ArrowRight,
-  Shield,
+  Check,
+  Sparkles,
   Gauge,
+  Shield,
+  Menu,
+  X,
+  Newspaper,
+  Calendar,
   Eye,
-  Users,
-  CheckCircle2,
+  Tag,
 } from "lucide-react";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
+import { getPublishedNews } from "@/utils/news";
 
-const roles = [
+const heroStats = [
+  { label: "Rata-rata Berat Ayam", value: "1.8 kg" },
+  { label: "Kebutuhan Pakan Besok", value: "120 kg" },
+  { label: "Rekomendasi Per Ayam", value: "110 g/ekor" },
+];
+
+const featureCards = [
   {
-    label: "Admin Developer",
+    title: "Pemantauan Sensor Real-time",
+    category: "IoT",
     description:
-      "Mengatur seluruh konfigurasi sistem, hak akses, dan integrasi sensor IoT agar platform berjalan stabil.",
-    highlights: [
-      "Kontrol penuh pengaturan aplikasi",
-      "Monitoring log sistem dan API",
-      "Pengelolaan pengguna lintas peran",
-    ],
-    icon: Shield,
-    cta: "/admin",
-    accent: "from-[#001B34] to-[#003561]",
+      "Pantau suhu, kelembapan, amonia, dan kondisi pakan di seluruh kandang secara langsung.",
   },
   {
-    label: "Operator Kandang",
+    title: "Notifikasi Cerdas",
+    category: "Alert",
     description:
-      "Memantau kondisi kandang, memperbarui data harian, serta memastikan sensor dan perangkat lapangan dalam keadaan optimal.",
-    highlights: [
-      "Pantauan sensor real-time",
-      "Catatan aktivitas kandang",
-      "Laporan performa populasi",
-    ],
+      "Terima peringatan otomatis saat kondisi kandang melebihi ambang aman via email atau aplikasi.",
+  },
+  {
+    title: "Manajemen Kandang",
+    category: "Management",
+    description:
+      "Kelola banyak kandang lengkap dengan populasi ayam, umur, status kesehatan, dan jadwal pakan.",
+  },
+  {
+    title: "Statistik Pertumbuhan",
+    category: "Analytics",
+    description:
+      "Analisis kenaikan berat ayam, mortalitas, dan efisiensi pakan dengan grafik interaktif.",
+  },
+  {
+    title: "Dashboard Berbasis Data",
+    category: "Dashboard",
+    description:
+      "Visualisasikan seluruh data peternakan di dalam dashboard intuitif untuk keputusan cepat.",
+  },
+  {
+    title: "Analitik Produksi",
+    category: "ML",
+    description:
+      "Optimalkan biaya dan ROI melalui analisis produksi yang terperinci.",
+  },
+  {
+    title: "Prediksi Machine Learning",
+    category: "AI",
+    description:
+      "Prediksi kebutuhan pakan, waktu pemberian optimal, dan potensi penyakit lebih dini.",
+  },
+  {
+    title: "Integrasi Perangkat IoT",
+    category: "Integration",
+    description:
+      "Hubungkan sensor Poultrigo, otomatisasi pakan, dan perangkat monitoring ke satu platform.",
+  },
+  {
+    title: "Penjadwalan Otomatis",
+    category: "Automation",
+    description:
+      "Atur jadwal pakan, kebersihan, dan pemeliharaan dengan pengingat otomatis.",
+  },
+];
+
+const whyCards = [
+  {
+    title: "Keputusan berbasis data",
+    desc: "Manfaatkan data realtime yang diperkaya AI untuk setiap langkah.",
+    metric: "95%",
+    caption: "Keputusan lebih akurat",
+    icon: Activity,
+  },
+  {
+    title: "Hemat waktu & biaya",
+    desc: "Otomasi rutinitas, kurangi kerja manual, dan tekan biaya operasional.",
+    metric: "30%",
+    caption: "Penghematan biaya",
+    icon: Sparkles,
+  },
+  {
+    title: "Integrasi IoT penuh",
+    desc: "Hubungkan sensor, feeder otomatis, dan perangkat monitoring tanpa ribet.",
+    metric: "100+",
+    caption: "Perangkat terintegrasi",
     icon: Gauge,
-    cta: "/operator",
-    accent: "from-orange-500 to-orange-600",
   },
   {
-    label: "Guest / Pembeli",
-    description:
-      "Akses ringkas untuk melihat produk ayam, status pesanan, dan transparansi kualitas peternakan digital Poultrigo.",
-    highlights: [
-      "Informasi ketersediaan produk",
-      "Riwayat dan status pesanan",
-      "Transparansi data peternakan",
+    title: "Solusi skalabel",
+    desc: "Dari satu kandang hingga ratusan lokasi, sistem tumbuh bersama bisnis Anda.",
+    metric: "∞",
+    caption: "Skala tanpa batas",
+    icon: Shield,
+  },
+  {
+    title: "Analitik ML",
+    desc: "Prediksi kebutuhan pakan & kesehatan ayam secara proaktif 24/7.",
+    metric: "24/7",
+    caption: "Pengawasan AI",
+    icon: Sparkles,
+  },
+  {
+    title: "Keamanan tepercaya",
+    desc: "Keamanan enterprise dengan SLA ketersediaan 99,9%.",
+    metric: "99.9%",
+    caption: "Uptime SLA",
+    icon: Shield,
+  },
+];
+
+const roleCards = [
+  {
+    title: "Guest / Pembeli",
+    badge: "Public Access",
+    items: [
+      "Akses informasi produk dan harga",
+      "Melihat fitur dan manfaat",
+      "Mendaftar akun baru",
+      "Menghubungi tim dukungan",
     ],
-    icon: Eye,
-    cta: "/guest",
-    accent: "from-slate-500 to-slate-600",
+    cta: "Pelajari",
+  },
+  {
+    title: "Operator Kandang",
+    badge: "Farm Operations",
+    highlight: true,
+    items: [
+      "Pantau seluruh kandang ayam",
+      "Perbarui data harian lapangan",
+      "Cek sensor realtime",
+      "Kelola populasi ayam",
+      "Lihat laporan & analitik",
+      "Terima alert & notifikasi",
+    ],
+    cta: "Mulai Sekarang",
+  },
+  {
+    title: "Admin Developer",
+    badge: "Full Control",
+    items: [
+      "Akses penuh konfigurasi sistem",
+      "Manajemen pengguna",
+      "Pengaturan sensor dan perangkat",
+      "Melihat log sistem & API",
+      "Integrasi dengan aplikasi lain",
+    ],
+    cta: "Pelajari",
+  },
+];
+
+const partnerLogos = [
+  {
+    name: "PT. Japfa",
+    logo: "/Japfa_logo.svg",
+  },
+  {
+    name: "Institut Pertanian Bogor",
+    logo: "/Logo-IPB-New.png",
   },
 ];
 
 export function LandingPage() {
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Get latest news articles (3 most recent)
+  const latestNews = getPublishedNews().slice(0, 3);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+      setMobileMenuOpen(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white text-base text-[#0f172a]">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#001B34] to-[#003e73] text-white shadow-lg">
-              <Activity className="h-6 w-6 text-orange-400" />
+    <div className="bg-slate-50 text-slate-900">
+      {/* Navbar */}
+      <header
+        className={`sticky top-0 z-40 border-b transition-all duration-300 ${
+          scrolled
+            ? "border-slate-200 bg-white shadow-sm"
+            : "border-slate-200/50 bg-white/95 backdrop-blur-md"
+        }`}
+      >
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg transition-transform hover:scale-105 sm:h-10 sm:w-10 sm:rounded-2xl">
+              <Activity className="h-4 w-4 text-white sm:h-5 sm:w-5" />
             </div>
             <div>
-              <p className="text-lg font-semibold">Poultrigo</p>
-              <p className="text-xs text-slate-500">
-                Platform Performa Peternakan Ayam
-              </p>
+              <p className="text-base font-semibold text-[#001B34] sm:text-lg">Poultrigo</p>
+              <p className="text-[10px] text-slate-500 sm:text-xs">Smart Poultry IoT</p>
             </div>
           </div>
-          <div className="hidden items-center gap-4 md:flex">
+
+          {/* Desktop Navigation */}
+          <nav className="hidden items-center gap-4 text-sm text-slate-600 md:flex lg:gap-6">
+            {["Fitur", "Cara Kerja", "Kenapa Kami", "Peran"].map((item) => (
+              <button
+                key={item}
+                onClick={() => scrollToSection(item.toLowerCase().replace(" ", "-"))}
+                className="transition-colors hover:text-[#001B34]"
+              >
+                {item}
+              </button>
+            ))}
             <button
-              type="button"
+              onClick={() => router.push("/news")}
+              className="transition-colors hover:text-[#001B34]"
+            >
+              Berita
+            </button>
+            <button
               onClick={() => router.push("/login")}
-              className="text-sm text-slate-600 transition-colors hover:text-[#001B34]"
+              className="transition-colors hover:text-[#001B34]"
             >
               Masuk
             </button>
             <button
-              type="button"
               onClick={() => router.push("/register")}
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-2 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-orange-500/40"
+              className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
             >
               Daftar
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-3.5 w-3.5" />
             </button>
-          </div>
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 md:hidden"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
         </div>
+
+          {/* Mobile Navigation */}
+          {mobileMenuOpen && (
+            <nav className="border-t border-slate-200 bg-white px-4 py-4 md:hidden">
+              <div className="space-y-2">
+                {["Fitur", "Cara Kerja", "Kenapa Kami", "Peran"].map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => scrollToSection(item.toLowerCase().replace(" ", "-"))}
+                    className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#001B34]"
+                  >
+                    {item}
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    router.push("/news");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#001B34]"
+                >
+                  Berita
+                </button>
+              <button
+                onClick={() => router.push("/login")}
+                className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#001B34]"
+              >
+                Masuk
+              </button>
+              <button
+                onClick={() => router.push("/register")}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-medium text-white shadow-md"
+              >
+                Daftar
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </nav>
+        )}
       </header>
 
       <main>
-        <section className="bg-gradient-to-br from-[#001B34] via-[#0b2d55] to-[#001B34] px-6 py-20 text-white">
-          <div className="mx-auto flex max-w-6xl flex-col gap-12 lg:flex-row">
-            <div className="w-full space-y-6 lg:w-1/2">
-              <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm text-orange-300">
-                <Users className="h-4 w-4" />
-                Tiga peran inti, satu platform terpadu
-              </p>
-              <h1 className="text-4xl font-semibold leading-tight lg:text-5xl">
-                Pantau, kelola, dan kolaborasikan peternakan ayam modern dalam satu
-                sistem.
+        {/* Hero */}
+        <section className="relative overflow-hidden bg-gradient-to-br from-[#001B34] via-[#052348] to-[#001B34] px-4 py-12 text-white sm:px-6 sm:py-16">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute left-1/4 top-1/4 h-64 w-64 animate-pulse rounded-full bg-orange-500 blur-3xl" />
+            <div className="absolute bottom-1/4 right-1/4 h-64 w-64 animate-pulse rounded-full bg-blue-500 blur-3xl" style={{ animationDelay: "1s" }} />
+          </div>
+          <div className="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-2 lg:gap-10">
+            <div className="space-y-4 sm:space-y-5 lg:space-y-6 animate-fade-in-up">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs text-orange-200 backdrop-blur-sm sm:px-4 sm:text-sm">
+                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                Platform IoT + Machine Learning
+              </span>
+              <h1 className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
+                Poultrigo – Platform IoT & ML Pintar untuk Peternakan Ayam
               </h1>
-              <p className="text-lg text-slate-200">
-                Poultrigo memisahkan pengalaman Admin, Operator, dan Guest agar setiap
-                peran fokus pada keputusan penting—mulai dari konfigurasi IoT, operasional
-                kandang, hingga transparansi kepada pembeli.
+              <p className="text-base text-white/80 sm:text-lg">
+                Transformasikan peternakan Anda dengan pemantauan real-time, otomasi pakan,
+                dan analitik AI. Tingkatkan efisiensi, kurangi biaya, dan optimalkan
+                kesehatan ayam.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-3 sm:gap-4">
                 <button
-                  type="button"
                   onClick={() => router.push("/register")}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 font-medium text-white transition-all hover:shadow-2xl hover:shadow-orange-500/30"
+                  className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl sm:px-6 sm:py-3 sm:rounded-2xl"
                 >
-                  Mulai Digitalisasi
-                  <ArrowRight className="h-5 w-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => router.push("/login")}
-                  className="rounded-xl border border-white/30 px-6 py-3 font-medium text-white transition-colors hover:bg-white/10"
-                >
-                  Lihat Demo Peran
+                  Mulai Sekarang
                 </button>
               </div>
+              <div className="flex flex-wrap gap-4 text-xs text-white/80 sm:gap-6 sm:text-sm">
+                {["Pemantauan realtime", "Analitik AI", "Dukungan 24/7"].map(
+                  (item) => (
+                    <div key={item} className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-400" />
+                      {item}
+                    </div>
+                  ),
+                )}
+              </div>
             </div>
-            <div className="w-full lg:w-1/2">
-              <div className="overflow-hidden rounded-3xl border border-white/20 bg-white/5 shadow-2xl">
+            <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur-sm sm:rounded-3xl sm:p-4">
                 <ImageWithFallback
                   src="https://images.unsplash.com/photo-1697545698404-46828377ae9d?auto=format&fit=crop&w=1200&q=80"
-                  alt="Dashboard Poultrigo"
-                  className="h-72 w-full object-cover"
+                  alt="Peternakan modern"
+                  className="h-56 w-full rounded-xl object-cover sm:h-64 lg:h-72 sm:rounded-2xl"
                 />
-                <div className="space-y-4 px-6 py-6">
-                  <p className="text-sm uppercase tracking-[0.3em] text-orange-300">
-                    Penyelarasan Peran
-                  </p>
-                  <div className="grid gap-4 text-sm text-slate-200 md:grid-cols-3">
-                    {[
-                      { title: "Admin", desc: "Atur sensor dan akses" },
-                      { title: "Operator", desc: "Catat data kandang" },
-                      { title: "Guest", desc: "Pantau stok & pesanan" },
-                    ].map((info) => (
-                      <div key={info.title} className="rounded-xl border border-white/10 p-3">
-                        <p className="font-semibold text-white">{info.title}</p>
-                        <p>{info.desc}</p>
-                      </div>
-                    ))}
-                  </div>
+                <div className="mt-3 grid gap-3 sm:mt-4 sm:grid-cols-3 sm:gap-4">
+                  {heroStats.map((stat, idx) => (
+                    <div
+                      key={stat.label}
+                      className="rounded-xl border border-white/10 bg-white/10 p-2.5 text-xs backdrop-blur-sm sm:rounded-2xl sm:p-3 sm:text-sm animate-scale-in"
+                      style={{ animationDelay: `${0.4 + idx * 0.1}s` }}
+                    >
+                      <p className="text-white/60">{stat.label}</p>
+                      <p className="mt-1 text-base font-semibold text-white sm:text-lg">
+                        {stat.value}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="px-6 py-16">
-          <div className="mx-auto max-w-5xl text-center">
-            <h2 className="text-3xl font-semibold text-[#001B34]">
-              Tiga pengalaman berbeda untuk satu tujuan yang sama.
-            </h2>
-            <p className="mt-4 text-slate-600">
-              Setiap peran memiliki dashboard khusus agar komunikasi data antar tim lebih
-              jelas dan keputusan bisa diambil lebih cepat.
+        {/* About */}
+        <section id="fitur" className="px-4 py-12 sm:px-6 sm:py-16">
+          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2 lg:gap-10">
+            <div className="space-y-4 sm:space-y-5 lg:space-y-6 animate-fade-in-up">
+              <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs text-orange-600 sm:px-4 sm:text-sm">
+                Tentang Poultrigo
+              </span>
+              <h2 className="text-2xl font-semibold text-[#001B34] sm:text-3xl">
+                Masa Depan Manajemen Peternakan Ayam
+              </h2>
+              <p className="text-sm text-slate-600 sm:text-base">
+                Poultrigo adalah platform IoT dan Machine Learning yang dirancang untuk
+                peternakan ayam modern. Kami menyediakan alat komprehensif, dashboard
+                cerdas, dan sistem pemantauan real-time untuk memudahkan transisi ke operasi
+                digital.
+              </p>
+              <p className="text-sm text-slate-600 sm:text-base">
+                Dengan sensor terbaru dan analitik AI, Anda dapat meningkatkan kesehatan
+                ayam, efisiensi pakan, menekan biaya, dan memaksimalkan produktivitas
+                peternakan.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+                {[
+                  { title: "Platform IoT", desc: "Pemrosesan data berbasis cloud" },
+                  { title: "Dashboard Pintar", desc: "Insight realtime yang jelas" },
+                  { title: "Machine Learning", desc: "Analisis prediktif otomatis" },
+                  { title: "Alert Sistem", desc: "Notifikasi cepat & responsif" },
+                ].map((item, idx) => (
+                  <div
+                    key={item.title}
+                    className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-all hover:shadow-md sm:rounded-2xl sm:p-4 animate-scale-in"
+                    style={{ animationDelay: `${0.1 + idx * 0.1}s` }}
+                  >
+                    <p className="font-semibold text-[#001B34] sm:text-sm">{item.title}</p>
+                    <p className="text-xs text-slate-600 sm:text-sm">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => router.push("/register")}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#001B34] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:scale-105 hover:shadow-lg sm:rounded-2xl sm:px-5 sm:py-3"
+              >
+                Pelajari Selengkapnya
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="relative animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+              <ImageWithFallback
+                src="https://images.unsplash.com/photo-1694854038360-56b29a16fb0c?auto=format&fit=crop&w=1200&q=80"
+                alt="Kandang ayam modern"
+                className="h-full rounded-2xl object-cover sm:rounded-3xl"
+              />
+              <div className="absolute -bottom-4 left-4 rounded-xl bg-white p-3 shadow-xl sm:-bottom-6 sm:left-6 sm:rounded-2xl sm:p-4">
+                <p className="text-xs text-slate-500 sm:text-sm">Kenaikan efisiensi rata-rata</p>
+                <p className="text-2xl font-semibold text-[#001B34] sm:text-3xl">+35%</p>
+                <p className="text-[10px] text-slate-500 sm:text-xs">Peternakan pengguna Poultrigo</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section id="cara-kerja" className="bg-slate-100 px-4 py-12 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-7xl text-center">
+            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-600 sm:px-4 sm:text-sm">
+              Cara Kerja
+            </span>
+            <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
+              Sistem sederhana namun kuat
+            </h3>
+            <p className="mt-2 text-sm text-slate-600 sm:text-base">
+              Solusi end-to-end yang menghubungkan kandang dengan cloud
+            </p>
+            <div className="mt-8 grid gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
+              {[
+                {
+                  step: "01",
+                  title: "Sensor IoT",
+                  desc: "Perangkat Poultrigo mengukur pakan, menimbang pakan yang telah ada, memprediksi pakan, dan memberikan pakan sesuai dengan prediksi.",
+                  img: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=800&q=80",
+                },
+                {
+                  step: "02",
+                  title: "Data Ke Cloud",
+                  desc: "Data dikirim otomatis ke Poultrigo Cloud untuk disimpan dan diproses.",
+                  img: "https://images.unsplash.com/photo-1483478550801-ceba5fe50e8e?auto=format&fit=crop&w=800&q=80",
+                },
+                {
+                  step: "03",
+                  title: "Analisis ML",
+                  desc: "Model machine learning memprediksi kebutuhan pakan sesuai dengan kategori ayam.",
+                  img: "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=800&q=80",
+                },
+                {
+                  step: "04",
+                  title: "Dashboard Pintar",
+                  desc: "Admin dan operator melihat rekomendasi dan status di dashboard.",
+                  img: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80",
+                },
+              ].map((card, idx) => (
+                <div
+                  key={card.step}
+                  className="group rounded-2xl bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg sm:rounded-3xl sm:p-5 animate-scale-in"
+                  style={{ animationDelay: `${0.1 + idx * 0.1}s` }}
+                >
+                  <Image
+                    src={card.img}
+                    alt={card.title}
+                    width={400}
+                    height={260}
+                    className="h-40 w-full rounded-xl object-cover transition-transform group-hover:scale-105 sm:h-48 sm:rounded-2xl"
+                    priority={card.step === "01"}
+                  />
+                  <div className="mt-3 flex flex-col items-center gap-2 text-center sm:mt-4">
+                    <div className="flex items-center gap-2 text-xs text-orange-600 sm:text-sm">
+                      <span className="font-semibold">{card.step}</span>
+                      <span className="font-semibold text-[#001B34] sm:text-base">{card.title}</span>
+                    </div>
+                    <p className="text-xs leading-relaxed text-slate-600 sm:text-sm">{card.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Features */}
+        <section id="kenapa-kami" className="px-4 py-12 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-7xl text-center">
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700 sm:px-4 sm:text-sm">
+              Fitur Inti
+            </span>
+            <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
+              Semua yang Anda butuhkan dalam satu platform
+            </h3>
+            <p className="mt-2 text-sm text-slate-600 sm:text-base">
+              Alat lengkap untuk manajemen peternakan ayam modern
             </p>
           </div>
-          <div className="mx-auto mt-10 grid max-w-6xl gap-6 md:grid-cols-3">
-            {roles.map((role) => (
+          <div className="mx-auto mt-8 grid max-w-7xl gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+            {featureCards.map((feature, idx) => (
               <div
-                key={role.label}
-                className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                key={feature.title}
+                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md sm:rounded-3xl sm:p-5 animate-scale-in"
+                style={{ animationDelay: `${0.05 + idx * 0.05}s` }}
               >
-                <div
-                  className={`flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${role.accent} text-white`}
-                >
-                  <role.icon className="h-6 w-6" />
+                <div className="mb-2 inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[10px] text-slate-500 sm:mb-3 sm:px-3 sm:text-xs">
+                  {feature.category}
                 </div>
-                <h3 className="mt-4 text-2xl font-semibold text-[#001B34]">
-                  {role.label}
-                </h3>
-                <p className="mt-2 text-sm text-slate-600">{role.description}</p>
-                <ul className="mt-4 space-y-3 text-sm text-slate-600">
-                  {role.highlights.map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  onClick={() => router.push(role.cta)}
-                  className="mt-auto w-full rounded-xl bg-slate-100 py-3 text-sm font-semibold text-[#001B34] transition hover:bg-slate-200"
-                >
-                  Buka Tampilan
-                </button>
+                <p className="text-base font-semibold text-[#001B34] sm:text-lg">
+                  {feature.title}
+                </p>
+                <p className="mt-1.5 text-xs text-slate-600 sm:mt-2 sm:text-sm">{feature.description}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="bg-slate-50 px-6 py-16">
-          <div className="mx-auto flex max-w-6xl flex-col gap-10 lg:flex-row">
-            <div className="w-full space-y-4 lg:w-1/2">
-              <p className="text-sm font-semibold uppercase tracking-widest text-orange-600">
-                Kenapa tetap satu platform?
-              </p>
-              <h3 className="text-3xl font-semibold text-[#001B34]">
-                Data yang sama dapat dibaca dengan konteks berbeda oleh setiap peran.
-              </h3>
-              <p className="text-slate-600">
-                Admin fokus pada konfigurasi dan keamanan, Operator memantau rutinitas
-                kandang, sedangkan Guest melihat transparansi pasokan. Semua berbagi dasar
-                data yang sama sehingga keputusan lebih cepat dan akurat.
-              </p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {[
-                  {
-                    title: "Bahasa yang sama",
-                    body: "Istilah dan status sistem disesuaikan dengan kebutuhan lokal peternakan.",
-                  },
-                  {
-                    title: "Data konsisten",
-                    body: "Tidak ada duplikasi entri. Perbedaan hanya pada level akses.",
-                  },
-                  {
-                    title: "Kolaborasi cepat",
-                    body: "Peringatan sensor langsung diteruskan ke peran yang tepat.",
-                  },
-                  {
-                    title: "Transparan untuk pembeli",
-                    body: "Guest cukup melihat ringkasan tanpa mengganggu pekerjaan operator.",
-                  },
-                ].map((item) => (
-                  <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-base font-semibold text-[#001B34]">
-                      {item.title}
-                    </p>
-                    <p className="text-sm text-slate-600">{item.body}</p>
-                  </div>
-                ))}
+        {/* Why choose */}
+        <section className="bg-slate-100 px-4 py-12 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-7xl text-center">
+            <span className="rounded-full bg-purple-100 px-3 py-1 text-xs text-purple-600 sm:px-4 sm:text-sm">
+              Mengapa Poultrigo
+            </span>
+            <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
+              Dibangun untuk peternak modern
+            </h3>
+            <p className="mt-2 text-sm text-slate-600 sm:text-base">
+              Ratusan peternak telah bertransformasi bersama Poultrigo
+            </p>
+          </div>
+          <div className="mx-auto mt-8 grid max-w-7xl gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-6">
+            {whyCards.map((card, idx) => (
+              <div
+                key={card.title}
+                className="group rounded-2xl bg-white p-4 shadow-sm transition-all hover:shadow-md sm:rounded-3xl sm:p-6 animate-scale-in"
+                style={{ animationDelay: `${0.1 + idx * 0.1}s` }}
+              >
+                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 text-[#001B34] transition-transform group-hover:scale-110 sm:mb-4 sm:h-12 sm:w-12 sm:rounded-2xl">
+                  <card.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                </div>
+                <p className="text-base font-semibold text-[#001B34] sm:text-lg">{card.title}</p>
+                <p className="mt-1 text-xs text-slate-600 sm:mt-2 sm:text-sm">{card.desc}</p>
+                <div className="mt-3 border-t border-slate-100 pt-3 text-[#001B34] sm:mt-4">
+                  <p className="text-2xl font-semibold sm:text-3xl">{card.metric}</p>
+                  <p className="text-[10px] text-slate-500 sm:text-xs">{card.caption}</p>
+                </div>
               </div>
-            </div>
-            <div className="w-full rounded-3xl border border-slate-200 bg-white p-6 lg:w-1/2">
-              <h4 className="text-xl font-semibold text-[#001B34]">
-                Ringkasan alur kerja antar peran
-              </h4>
-              <div className="mt-6 space-y-5 text-sm text-slate-600">
-                {[
-                  {
-                    step: "1",
-                    title: "Admin menambahkan perangkat baru",
-                    desc: "Sensor IoT otomatis terdaftar dan siap dipantau.",
-                  },
-                  {
-                    step: "2",
-                    title: "Operator memantau data lapangan",
-                    desc: "Jika ada anomali, tugas harian langsung diperbarui.",
-                  },
-                  {
-                    step: "3",
-                    title: "Guest menerima informasi transparan",
-                    desc: "Pembeli melihat stok dan kualitas tanpa mengganggu proses internal.",
-                  },
-                ].map((timeline) => (
-                  <div key={timeline.step} className="flex gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 font-semibold text-[#001B34]">
-                      {timeline.step}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[#001B34]">{timeline.title}</p>
-                      <p>{timeline.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
-        <section className="px-6 py-16">
-          <div className="mx-auto max-w-4xl rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 px-8 py-12 text-center text-white">
-            <h3 className="text-3xl font-semibold">
-              Mari fokus pada operasi, bukan kebingungan peran.
+        <section id="peran" className="px-4 py-12 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-7xl text-center">
+            <span className="rounded-full bg-rose-100 px-3 py-1 text-xs text-rose-600 sm:px-4 sm:text-sm">
+              Roles & Access
+            </span>
+            <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
+              Pembagian peran dalam sistem Poultrigo
             </h3>
-            <p className="mt-4 text-lg text-white/80">
-              Gunakan Poultrigo untuk menyatukan tim admin, operator, dan pembeli dalam satu
-              bahasa digital.
+            <p className="mt-2 text-sm text-slate-600 sm:text-base">
+              Setiap peran memiliki tanggung jawab dan hak akses berbeda
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-4">
-              <button
-                type="button"
-                onClick={() => router.push("/register")}
-                className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-orange-600 transition hover:bg-slate-100"
+          </div>
+          <div className="mx-auto mt-8 max-w-7xl space-y-6 sm:mt-10 sm:space-y-8">
+            {roleCards.map((role, idx) => (
+              <div
+                key={role.title}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm transition-all hover:shadow-md sm:rounded-2xl sm:px-6 sm:py-5 animate-scale-in"
+                style={{ animationDelay: `${0.1 + idx * 0.1}s` }}
               >
-                Daftar Sebagai Guest
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-4">
+                  <div>
+                    <p className="text-xl font-semibold text-[#001B34] sm:text-2xl">
+                      {role.title}
+                    </p>
+                    <p className="text-xs text-slate-500 sm:text-sm">{role.badge}</p>
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2 text-xs text-slate-600 sm:flex-row sm:gap-6 sm:text-sm lg:gap-8">
+                    <ul className="flex-1 space-y-1.5 sm:space-y-2">
+                      {role.items.slice(0, Math.ceil(role.items.length / 2)).map((item) => (
+                        <li key={item} className="flex items-start gap-2">
+                          <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-green-500 sm:h-4 sm:w-4" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <ul className="flex-1 space-y-1.5 sm:space-y-2">
+                      {role.items.slice(Math.ceil(role.items.length / 2)).map((item) => (
+                        <li key={item} className="flex items-start gap-2">
+                          <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-green-500 sm:h-4 sm:w-4" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+        
+        {/* Mitra Kami */}
+        <section id="mitra" className="px-4 py-12 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-7xl text-center">
+            <span className="rounded-full bg-teal-100 px-3 py-1 text-xs text-teal-600 sm:px-4 sm:text-sm">
+              Mitra Kami
+            </span>
+            <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
+              Dipercaya oleh integrator dan produsen pakan besar
+            </h3>
+            <p className="mt-2 text-sm text-slate-600 sm:text-base">
+              Berikut beberapa mitra yang menggunakan Poultrigo untuk mengoptimalkan
+              operasi peternakan ayam mereka.
+            </p>
+          </div>
+          <div className="mx-auto mt-8 flex max-w-7xl flex-wrap items-center justify-center gap-6 sm:mt-10 sm:gap-10 animate-fade-in">
+            {partnerLogos.map((partner, index) => (
+              <div
+                key={partner.name}
+                className="flex items-center justify-center opacity-90 transition-all hover:scale-110 hover:opacity-100"
+                style={{ animationDelay: `${index * 200}ms` }}
+              >
+                <Image
+                  src={partner.logo}
+                  alt={partner.name}
+                  width={150}
+                  height={60}
+                  className="h-10 w-auto object-contain sm:max-h-12"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Latest News Section */}
+        {latestNews.length > 0 && (
+          <section id="berita" className="px-4 py-12 sm:px-6 sm:py-16">
+            <div className="mx-auto max-w-7xl">
+              <div className="mb-8 text-center">
+                <span className="rounded-full bg-orange-100 px-3 py-1 text-xs text-orange-600 sm:px-4 sm:text-sm">
+                  Berita & Artikel
+                </span>
+                <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
+                  Berita Terbaru dari Poultrigo
+                </h3>
+                <p className="mt-2 text-sm text-slate-600 sm:text-base">
+                  Dapatkan insight terbaru tentang teknologi peternakan, tips praktis, dan update sistem
+                </p>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {latestNews.map((article, idx) => (
+                  <article
+                    key={article.id}
+                    onClick={() => router.push(`/news/${article.id}`)}
+                    className="group cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:border-orange-300 hover:shadow-lg"
+                  >
+                    {article.featuredImage && (
+                      <div className="relative h-48 w-full overflow-hidden sm:h-52">
+                        <Image
+                          src={article.featuredImage}
+                          alt={article.title}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                        <div className="absolute left-3 top-3">
+                          <span
+                            className={`rounded-full border px-2.5 py-1 text-xs font-semibold backdrop-blur-sm ${
+                              article.category === "Teknologi"
+                                ? "bg-blue-500/20 text-blue-700 border-blue-300"
+                                : article.category === "Tips"
+                                  ? "bg-green-500/20 text-green-700 border-green-300"
+                                  : article.category === "Berita"
+                                    ? "bg-purple-500/20 text-purple-700 border-purple-300"
+                                    : article.category === "Update"
+                                      ? "bg-orange-500/20 text-orange-700 border-orange-300"
+                                      : "bg-indigo-500/20 text-indigo-700 border-indigo-300"
+                            }`}
+                          >
+                            {article.category}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="p-5 sm:p-6">
+                      {!article.featuredImage && (
+                        <div className="mb-3">
+                          <span
+                            className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                              article.category === "Teknologi"
+                                ? "bg-blue-500/10 text-blue-700 border-blue-200"
+                                : article.category === "Tips"
+                                  ? "bg-green-500/10 text-green-700 border-green-200"
+                                  : article.category === "Berita"
+                                    ? "bg-purple-500/10 text-purple-700 border-purple-200"
+                                    : article.category === "Update"
+                                      ? "bg-orange-500/10 text-orange-700 border-orange-200"
+                                      : "bg-indigo-500/10 text-indigo-700 border-indigo-200"
+                            }`}
+                          >
+                            {article.category}
+                          </span>
+                        </div>
+                      )}
+                      <h4 className="mb-2 line-clamp-2 text-lg font-bold leading-snug text-[#001B34] transition-colors group-hover:text-orange-600 sm:text-xl">
+                        {article.title}
+                      </h4>
+                      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-slate-600 sm:text-base">
+                        {article.excerpt}
+                      </p>
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs text-slate-500 sm:text-sm">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {new Date(article.publishedAt).toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </span>
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <Eye className="h-3.5 w-3.5" />
+                          {article.views}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="mt-8 text-center">
+                <button
+                  type="button"
+                  onClick={() => router.push("/news")}
+                  className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-orange-600 hover:shadow-lg hover:scale-105"
+                >
+                  <Newspaper className="h-4 w-4" />
+                  Lihat Semua Berita
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* CTA */}
+        <section className="bg-gradient-to-r from-[#001B34] to-[#032247] px-4 py-12 text-white sm:px-6 sm:py-16">
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 text-center animate-fade-in-up">
+            <h3 className="text-2xl font-semibold sm:text-3xl">
+              Siap mengubah peternakan ayam Anda?
+            </h3>
+            <p className="text-sm text-white/80 sm:text-base">
+              Bergabung bersama peternak yang mengoptimalkan operasional mereka dengan
+              Poultrigo.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+              <button
+                onClick={() => router.push("/register")}
+                className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl sm:rounded-2xl sm:px-6 sm:py-3"
+              >
+                Mulai Sekarang
               </button>
               <button
-                type="button"
                 onClick={() => router.push("/login")}
-                className="rounded-xl border border-white/60 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                className="rounded-xl border border-white/40 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-white/10 sm:rounded-2xl sm:px-6 sm:py-3"
               >
-                Masuk Dashboard
+                Masuk
               </button>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-slate-200 bg-white px-6 py-10 text-slate-500">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 text-sm md:flex-row md:items-center md:justify-between">
+      <footer className="bg-[#001B34] px-4 py-8 text-xs text-white/80 sm:px-6 sm:py-12 sm:text-sm">
+        <div className="mx-auto grid max-w-7xl gap-6 sm:grid-cols-2 md:grid-cols-4 sm:gap-8">
+          <div>
+            <div className="mb-3 flex items-center gap-2 sm:mb-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500 text-white sm:h-10 sm:w-10 sm:rounded-xl">
+                <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
+              </div>
+              <div>
+                <p className="font-semibold text-white sm:text-sm">Poultrigo</p>
+                <p className="text-[10px] text-slate-300 sm:text-xs">Smart Poultry IoT</p>
+              </div>
+            </div>
+            <p className="text-xs leading-relaxed sm:text-sm">
+              Transformasikan peternakan Anda dengan teknologi IoT dan machine learning
+              dari Poultrigo.
+            </p>
+          </div>
+          <div>
+            <p className="mb-2 font-semibold text-white sm:mb-3 sm:text-sm">Produk</p>
+            <ul className="space-y-1.5 text-xs sm:space-y-2 sm:text-sm">
+              <li className="cursor-pointer hover:text-white transition-colors">Fitur</li>
+              <li className="cursor-pointer hover:text-white transition-colors">Cara Kerja</li>
+              <li className="cursor-pointer hover:text-white transition-colors">Demo</li>
+              <li className="cursor-pointer hover:text-white transition-colors">Harga</li>
+            </ul>
+          </div>
+          <div>
+            <p className="mb-2 font-semibold text-white sm:mb-3 sm:text-sm">Perusahaan</p>
+            <ul className="space-y-1.5 text-xs sm:space-y-2 sm:text-sm">
+              <li className="cursor-pointer hover:text-white transition-colors">Tentang Kami</li>
+              <li className="cursor-pointer hover:text-white transition-colors">Blog</li>
+              <li className="cursor-pointer hover:text-white transition-colors">Karier</li>
+              <li className="cursor-pointer hover:text-white transition-colors">Kontak</li>
+            </ul>
+          </div>
+          <div>
+            <p className="mb-2 font-semibold text-white sm:mb-3 sm:text-sm">Kontak</p>
+            <p className="text-xs sm:text-sm">Email: infopoultrigo@gmail.com</p>
+            <p className="text-xs sm:text-sm">Telepon: +62 853 8937 1126</p>
+            <p className="text-xs sm:text-sm">Bogor, Indonesia</p>
+          </div>
+        </div>
+        <div className="mx-auto mt-6 flex max-w-7xl flex-col gap-3 border-t border-white/10 pt-6 text-[10px] text-white/60 sm:mt-8 sm:flex-row sm:items-center sm:justify-between sm:text-xs">
           <p>&copy; {new Date().getFullYear()} Poultrigo. Semua hak dilindungi.</p>
-          <div className="flex flex-wrap gap-4">
-            <a href="#" className="hover:text-[#001B34]">
-              Kebijakan Privasi
-            </a>
-            <a href="#" className="hover:text-[#001B34]">
-              Ketentuan Layanan
-            </a>
-            <a href="#" className="hover:text-[#001B34]">
-              Bantuan
-            </a>
+          <div className="flex flex-wrap gap-3 sm:gap-4">
+            <a href="#" className="hover:text-white transition-colors">Kebijakan Privasi</a>
+            <a href="#" className="hover:text-white transition-colors">Ketentuan Layanan</a>
+            <a href="#" className="hover:text-white transition-colors">Kebijakan Cookie</a>
           </div>
         </div>
       </footer>
@@ -330,4 +845,3 @@ export function LandingPage() {
 }
 
 export default LandingPage;
-

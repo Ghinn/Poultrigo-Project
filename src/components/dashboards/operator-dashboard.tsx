@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Activity,
@@ -24,6 +24,11 @@ import {
   Download,
   Filter,
   RefreshCw,
+  Trash2,
+  X,
+  Save,
+  Menu,
+  Newspaper,
 } from "lucide-react";
 import {
   LineChart,
@@ -39,13 +44,83 @@ import {
 } from "recharts";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
 import useIsClient from "@/hooks/use-is-client";
+import {
+  getKandangs,
+  saveKandang,
+  updateKandang,
+  deleteKandang,
+  getDailyRecords,
+  saveDailyRecord,
+  updateDailyRecord,
+  deleteDailyRecord,
+  type Kandang,
+  type DailyRecord,
+} from "@/utils/operator-data";
+import { logout } from "@/utils/auth";
+
+type ModalMode = "create-kandang" | "edit-kandang" | "view-kandang" | "create-daily" | "edit-daily" | null;
 
 export function OperatorDashboard() {
   const router = useRouter();
   const isClient = useIsClient();
   const [activeTab, setActiveTab] = useState<
-    "overview" | "kandang" | "monitoring" | "daily" | "reports"
+    "overview" | "kandang" | "monitoring" | "daily" | "reports" | "news"
   >("overview");
+
+  // CRUD State for Kandang
+  const [kandangs, setKandangs] = useState<Kandang[]>(() => {
+    if (typeof window !== "undefined") {
+      return getKandangs();
+    }
+    return [];
+  });
+  const [selectedKandang, setSelectedKandang] = useState<Kandang | null>(null);
+  const [kandangFormData, setKandangFormData] = useState({
+    name: "",
+    population: 0,
+    age: 0,
+    status: "Optimal" as "Optimal" | "Peringatan" | "Kritis",
+    temp: "",
+    humidity: "",
+  });
+
+  // CRUD State for Daily Records
+  const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>(() => {
+    if (typeof window !== "undefined") {
+      return getDailyRecords();
+    }
+    return [];
+  });
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [selectedRecord, setSelectedRecord] = useState<DailyRecord | null>(null);
+  const [recordFormData, setRecordFormData] = useState({
+    date: new Date().toISOString().split("T")[0],
+    kandangId: "",
+    kandangName: "",
+    task: "",
+    time: "",
+    status: "Menunggu" as "Selesai" | "Menunggu" | "Terlewat",
+    notes: "",
+  });
+
+  const [modalMode, setModalMode] = useState<ModalMode>(null);
+  const [error, setError] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Load functions for manual refresh
+  const loadKandangs = useCallback(() => {
+    if (isClient) {
+      setKandangs(getKandangs());
+    }
+  }, [isClient]);
+
+  const loadDailyRecords = useCallback(() => {
+    if (isClient) {
+      setDailyRecords(getDailyRecords());
+    }
+  }, [isClient]);
 
   const sensorData = [
     { time: "00:00", temp: 27, humidity: 68, ammonia: 15 },
@@ -56,99 +131,185 @@ export function OperatorDashboard() {
     { time: "20:00", temp: 28, humidity: 67, ammonia: 17 },
   ];
 
-  const kandangData = [
-    {
-      id: "A1",
-      name: "Kandang A1",
-      population: 1500,
-      age: 25,
-      status: "Optimal",
-      temp: "28°C",
-      humidity: "65%",
-    },
-    {
-      id: "A2",
-      name: "Kandang A2",
-      population: 1450,
-      age: 20,
-      status: "Warning",
-      temp: "31°C",
-      humidity: "70%",
-    },
-    {
-      id: "B1",
-      name: "Kandang B1",
-      population: 1600,
-      age: 30,
-      status: "Optimal",
-      temp: "27°C",
-      humidity: "63%",
-    },
-    {
-      id: "B2",
-      name: "Kandang B2",
-      population: 1550,
-      age: 18,
-      status: "Optimal",
-      temp: "28°C",
-      humidity: "66%",
-    },
-  ];
+  // Filter daily records by selected date
+  const filteredDailyRecords = dailyRecords.filter((r) => r.date === selectedDate);
 
   const alerts = [
     {
       id: 1,
       type: "warning",
       kandang: "Kandang A2",
-      message: "Temperature above normal (31°C)",
-      time: "5 min ago",
+      message: "Suhu di atas normal (31°C)",
+      time: "5 menit lalu",
     },
     {
       id: 2,
       type: "info",
       kandang: "Kandang B1",
-      message: "Feeding time approaching",
-      time: "15 min ago",
+      message: "Waktu pemberian pakan akan segera tiba",
+      time: "15 menit lalu",
     },
     {
       id: 3,
       type: "warning",
       kandang: "Kandang A2",
-      message: "Humidity high (70%)",
-      time: "30 min ago",
+      message: "Kelembaban tinggi (70%)",
+      time: "30 menit lalu",
     },
   ];
 
-  const dailyTasks = [
-    {
-      id: 1,
-      task: "Pemberian pakan pagi",
-      kandang: "Semua Kandang",
-      time: "06:00",
-      status: "Done",
-    },
-    {
-      id: 2,
-      task: "Cek kondisi air minum",
-      kandang: "Kandang A1, A2",
-      time: "08:00",
-      status: "Done",
-    },
-    {
-      id: 3,
-      task: "Pembersihan kandang",
-      kandang: "Kandang B1",
-      time: "10:00",
-      status: "Pending",
-    },
-    {
-      id: 4,
-      task: "Pemberian pakan siang",
-      kandang: "Semua Kandang",
-      time: "12:00",
-      status: "Pending",
-    },
-  ];
+
+  // CRUD Functions for Kandang
+  const handleOpenCreateKandang = () => {
+    setKandangFormData({
+      name: "",
+      population: 0,
+      age: 0,
+      status: "Optimal",
+      temp: "",
+      humidity: "",
+    });
+    setSelectedKandang(null);
+    setModalMode("create-kandang");
+    setError("");
+  };
+
+  const handleOpenEditKandang = (kandang: Kandang) => {
+    setKandangFormData({
+      name: kandang.name,
+      population: kandang.population,
+      age: kandang.age,
+      status: kandang.status,
+      temp: kandang.temp,
+      humidity: kandang.humidity,
+    });
+    setSelectedKandang(kandang);
+    setModalMode("edit-kandang");
+    setError("");
+  };
+
+  const handleOpenViewKandang = (kandang: Kandang) => {
+    setSelectedKandang(kandang);
+    setModalMode("view-kandang");
+  };
+
+  const handleSaveKandang = () => {
+    setError("");
+    
+    if (!kandangFormData.name.trim()) {
+      setError("Nama kandang wajib diisi");
+      return;
+    }
+    if (kandangFormData.population <= 0) {
+      setError("Populasi harus lebih dari 0");
+      return;
+    }
+    if (kandangFormData.age < 0) {
+      setError("Usia tidak boleh negatif");
+      return;
+    }
+
+    if (modalMode === "create-kandang") {
+      saveKandang(kandangFormData);
+    } else if (modalMode === "edit-kandang" && selectedKandang) {
+      updateKandang(selectedKandang.id, kandangFormData);
+    }
+
+    loadKandangs();
+    setModalMode(null);
+    setSelectedKandang(null);
+  };
+
+  const handleDeleteKandang = (kandangId: string) => {
+    if (confirm("Apakah Anda yakin ingin menghapus kandang ini?")) {
+      deleteKandang(kandangId);
+      loadKandangs();
+      if (selectedKandang?.id === kandangId) {
+        setModalMode(null);
+        setSelectedKandang(null);
+      }
+    }
+  };
+
+  // CRUD Functions for Daily Records
+  const handleOpenCreateDaily = () => {
+    // Get current time in HH:MM format
+    const now = new Date();
+    const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+    
+    setRecordFormData({
+      date: selectedDate,
+      kandangId: "",
+      kandangName: "",
+      task: "",
+      time: currentTime, // Auto-fill with current system time
+      status: "Menunggu",
+      notes: "",
+    });
+    setSelectedRecord(null);
+    setModalMode("create-daily");
+    setError("");
+  };
+
+  const handleOpenEditDaily = (record: DailyRecord) => {
+    setRecordFormData({
+      date: record.date,
+      kandangId: record.kandangId,
+      kandangName: record.kandangName,
+      task: record.task,
+      time: record.time,
+      status: record.status,
+      notes: record.notes || "",
+    });
+    setSelectedRecord(record);
+    setModalMode("edit-daily");
+    setError("");
+  };
+
+  const handleSaveDailyRecord = () => {
+    setError("");
+    
+    if (!recordFormData.task.trim()) {
+      setError("Nama tugas wajib diisi");
+      return;
+    }
+    if (!recordFormData.kandangId) {
+      setError("Pilih kandang");
+      return;
+    }
+    if (!recordFormData.time.trim()) {
+      setError("Waktu wajib diisi");
+      return;
+    }
+
+    if (modalMode === "create-daily") {
+      saveDailyRecord(recordFormData);
+    } else if (modalMode === "edit-daily" && selectedRecord) {
+      updateDailyRecord(selectedRecord.id, recordFormData);
+    }
+
+    loadDailyRecords();
+    setModalMode(null);
+    setSelectedRecord(null);
+  };
+
+  const handleDeleteDailyRecord = (recordId: string) => {
+    if (confirm("Apakah Anda yakin ingin menghapus catatan ini?")) {
+      deleteDailyRecord(recordId);
+      loadDailyRecords();
+      if (selectedRecord?.id === recordId) {
+        setModalMode(null);
+        setSelectedRecord(null);
+      }
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalMode(null);
+    setSelectedKandang(null);
+    setSelectedRecord(null);
+    setError("");
+  };
 
   if (!isClient) {
     return (
@@ -159,99 +320,171 @@ export function OperatorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-orange-600">
-                <Activity className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <div className="text-[#001B34]">Operator Kandang</div>
-                <div className="text-sm text-slate-500">
-                  Farm Management Dashboard
+    <div className="flex min-h-screen bg-slate-50">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed left-0 top-0 z-50 h-screen w-64 bg-gradient-to-b from-orange-500 to-orange-600 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex h-full flex-col">
+          {/* Logo/Brand */}
+          <div className="border-b border-orange-400/30 p-4 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
+                  <Activity className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <div className="font-semibold text-white">Poultrigo</div>
+                  <div className="text-xs text-orange-100">Operator Kandang</div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-4">
               <button
                 type="button"
-                className="relative rounded-lg p-2 transition-colors hover:bg-slate-100"
+                onClick={() => setSidebarOpen(false)}
+                className="rounded-lg p-1.5 text-white transition-colors hover:bg-white/20 lg:hidden"
               >
-                <Bell className="h-6 w-6 text-slate-600" />
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push("/")}
-                className="flex items-center gap-2 rounded-lg px-4 py-2 text-slate-600 transition-colors hover:text-red-600"
-              >
-                <LogOut className="h-5 w-5" />
-                Logout
+                <X className="h-5 w-5" />
               </button>
             </div>
           </div>
-        </div>
-      </header>
 
-      <div className="border-b border-slate-200 bg-white">
-        <div className="px-6">
-          <div className="flex gap-8">
+          {/* Navigation Menu */}
+          <nav className="flex-1 space-y-1 overflow-y-auto p-3 sm:p-4">
             {[
-              { id: "overview", label: "Ikhtisar", icon: Gauge },
+              { id: "overview", label: "Beranda", icon: Gauge },
               { id: "kandang", label: "Kelola Kandang", icon: Home },
               { id: "monitoring", label: "Monitoring Sensor", icon: Activity },
               { id: "daily", label: "Data Harian", icon: Calendar },
               { id: "reports", label: "Laporan", icon: BarChart3 },
+              { id: "news", label: "Berita", icon: Newspaper, route: "/news" },
             ].map((tab) => (
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex items-center gap-2 border-b-2 px-4 py-4 transition-colors ${
+                onClick={() => {
+                  if ("route" in tab && tab.route) {
+                    router.push(tab.route);
+                  } else {
+                    setActiveTab(tab.id as typeof activeTab);
+                    setSidebarOpen(false);
+                  }
+                }}
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors sm:px-4 sm:py-3 ${
                   activeTab === tab.id
-                    ? "border-orange-500 text-orange-600"
-                    : "border-transparent text-slate-500 hover:text-slate-700"
+                    ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
+                    : "text-orange-50 hover:bg-white/10 hover:text-white"
                 }`}
               >
-                <tab.icon className="h-5 w-5" />
-                {tab.label}
+                <tab.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="font-medium">{tab.label}</span>
               </button>
             ))}
+          </nav>
+
+          {/* Logout Button */}
+          <div className="border-t border-orange-400/30 p-4">
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                router.push("/");
+              }}
+              className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-orange-50 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="font-medium">Keluar</span>
+            </button>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <div className="p-6">
+      {/* Main Content */}
+      <div className="lg:ml-64 flex-1">
+        {/* Header */}
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
+          <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 lg:hidden"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <div>
+                <h1 className="text-lg font-semibold text-[#001B34] sm:text-xl">
+                  {activeTab === "overview" && "Beranda"}
+                  {activeTab === "kandang" && "Kelola Kandang"}
+                  {activeTab === "monitoring" && "Monitoring Sensor"}
+                  {activeTab === "daily" && "Data Harian"}
+                  {activeTab === "reports" && "Laporan"}
+                </h1>
+                <p className="hidden text-xs text-slate-500 sm:block sm:text-sm">
+                  {activeTab === "overview" && "Dashboard manajemen kandang"}
+                  {activeTab === "kandang" && "Manajemen data kandang dan populasi ayam"}
+                  {activeTab === "monitoring" && "Pemantauan sensor real-time"}
+                  {activeTab === "daily" && "Manajemen data harian kandang"}
+                  {activeTab === "reports" && "Laporan dan analitik"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                className="relative rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100"
+                title="Notifikasi"
+              >
+                <Bell className="h-5 w-5" />
+                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <div className="p-4 sm:p-6">
         {activeTab === "overview" && (
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {[
                 {
                   label: "Total Kandang",
-                  value: "4",
+                  value: kandangs.length.toString(),
                   icon: Home,
                   color: "bg-orange-500",
                   trend: "Aktif",
                 },
                 {
                   label: "Total Populasi",
-                  value: "6,100",
+                  value: kandangs.reduce((sum, k) => sum + k.population, 0).toLocaleString(),
                   icon: ChickensIcon,
                   color: "bg-blue-500",
-                  trend: "+150",
+                  trend: "+" + (kandangs.length > 0 ? kandangs.reduce((sum, k) => sum + k.population, 0) % 200 : 0),
                 },
                 {
                   label: "Rata-rata Usia",
-                  value: "23 hari",
+                  value: kandangs.length > 0
+                    ? `${Math.round(kandangs.reduce((sum, k) => sum + k.age, 0) / kandangs.length)} hari`
+                    : "0 hari",
                   icon: Calendar,
                   color: "bg-green-500",
                   trend: "Normal",
                 },
                 {
                   label: "Status Sistem",
-                  value: "Optimal",
+                  value: kandangs.filter((k) => k.status === "Optimal").length === kandangs.length
+                    ? "Optimal"
+                    : "Peringatan",
                   icon: Activity,
                   color: "bg-purple-500",
                   trend: "99.8%",
@@ -282,7 +515,7 @@ export function OperatorDashboard() {
                 <div className="rounded-xl border border-slate-200 bg-white p-6">
                   <div className="mb-6 flex items-center justify-between">
                     <h3 className="text-lg text-[#001B34]">
-                      Monitoring Sensor Real-Time
+                      Pemantauan Sensor Real-Time
                     </h3>
                     <select className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:border-orange-500 focus:outline-none">
                       <option>Kandang A1</option>
@@ -382,9 +615,9 @@ export function OperatorDashboard() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-4 left-4 right-4 text-white">
-                      <div className="text-sm">Live Farm View</div>
+                      <div className="text-sm">Tampilan Kandang Langsung</div>
                       <div className="text-lg">
-                        Kandang A1 - Active Operations
+                        Kandang A1 - Operasi Aktif
                       </div>
                     </div>
                   </div>
@@ -431,23 +664,41 @@ export function OperatorDashboard() {
                 </div>
 
                 <div className="rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white">
-                  <h3 className="mb-4 text-lg">Quick Actions</h3>
+                  <h3 className="mb-4 text-lg">Aksi Cepat</h3>
                   <div className="space-y-2">
-                    {[
-                      { label: "Update Data Harian", icon: ClipboardList },
-                      { label: "Tambah Kandang", icon: Plus },
-                      { label: "Lihat Laporan", icon: BarChart3 },
-                    ].map((action) => (
-                      <button
-                        key={action.label}
-                        type="button"
-                        className="flex w-full items-center gap-3 rounded-lg bg-white/20 p-3 backdrop-blur-sm transition-all hover:bg-white/30"
-                      >
-                        <action.icon className="h-5 w-5" />
-                        <span>{action.label}</span>
-                        <ChevronRight className="ml-auto h-5 w-5" />
-                      </button>
-                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("daily");
+                        handleOpenCreateDaily();
+                      }}
+                      className="flex w-full items-center gap-3 rounded-lg bg-white/20 p-3 backdrop-blur-sm transition-all hover:bg-white/30"
+                    >
+                      <ClipboardList className="h-5 w-5" />
+                      <span>Update Data Harian</span>
+                      <ChevronRight className="ml-auto h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("kandang");
+                        handleOpenCreateKandang();
+                      }}
+                      className="flex w-full items-center gap-3 rounded-lg bg-white/20 p-3 backdrop-blur-sm transition-all hover:bg-white/30"
+                    >
+                      <Plus className="h-5 w-5" />
+                      <span>Tambah Kandang</span>
+                      <ChevronRight className="ml-auto h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("reports")}
+                      className="flex w-full items-center gap-3 rounded-lg bg-white/20 p-3 backdrop-blur-sm transition-all hover:bg-white/30"
+                    >
+                      <BarChart3 className="h-5 w-5" />
+                      <span>Lihat Laporan</span>
+                      <ChevronRight className="ml-auto h-5 w-5" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -457,15 +708,10 @@ export function OperatorDashboard() {
 
         {activeTab === "kandang" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl text-[#001B34]">Kelola Kandang</h2>
-                <p className="text-slate-600">
-                  Manajemen data kandang dan populasi ayam
-                </p>
-              </div>
+            <div className="flex items-center justify-end">
               <button
                 type="button"
+                onClick={handleOpenCreateKandang}
                 className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-white transition-all hover:shadow-lg"
               >
                 <Plus className="h-5 w-5" />
@@ -474,7 +720,7 @@ export function OperatorDashboard() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-              {kandangData.map((kandang) => (
+              {kandangs.map((kandang) => (
                 <div
                   key={kandang.id}
                   className="rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-xl"
@@ -526,6 +772,7 @@ export function OperatorDashboard() {
                   <div className="flex gap-2">
                     <button
                       type="button"
+                      onClick={() => handleOpenViewKandang(kandang)}
                       className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 transition-colors hover:bg-slate-50"
                     >
                       <Eye className="h-4 w-4" />
@@ -533,6 +780,7 @@ export function OperatorDashboard() {
                     </button>
                     <button
                       type="button"
+                      onClick={() => handleOpenEditKandang(kandang)}
                       className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-50 px-4 py-2 text-orange-600 transition-colors hover:bg-orange-100"
                     >
                       <Edit className="h-4 w-4" />
@@ -547,12 +795,6 @@ export function OperatorDashboard() {
 
         {activeTab === "monitoring" && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl text-[#001B34]">Monitoring Sensor</h2>
-              <p className="text-slate-600">
-                Monitor kondisi sensor secara real-time
-              </p>
-            </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[
@@ -665,15 +907,10 @@ export function OperatorDashboard() {
 
         {activeTab === "daily" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl text-[#001B34]">Data Harian</h2>
-                <p className="text-slate-600">
-                  Pencatatan aktivitas harian kandang
-                </p>
-              </div>
+            <div className="flex items-center justify-end">
               <button
                 type="button"
+                onClick={handleOpenCreateDaily}
                 className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-white transition-all hover:shadow-lg"
               >
                 <Plus className="h-5 w-5" />
@@ -686,58 +923,94 @@ export function OperatorDashboard() {
                 <Calendar className="h-5 w-5 text-slate-400" />
                 <input
                   type="date"
-                  className="rounded-lg border border-slate-200 px-3 py-2 focus:border-orange-500 focus:outline-none"
-                  defaultValue={new Date().toISOString().split("T")[0]}
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-base text-slate-900 focus:border-orange-500 focus:outline-none"
                 />
               </div>
 
               <div className="divide-y divide-slate-200">
-                {dailyTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="p-6 transition-colors hover:bg-slate-50"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                          task.status === "Done"
-                            ? "bg-green-100"
-                            : "bg-orange-100"
-                        }`}
-                      >
-                        <ClipboardList
-                          className={`h-5 w-5 ${
-                            task.status === "Done"
-                              ? "text-green-600"
-                              : "text-orange-600"
+                {filteredDailyRecords.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-slate-500">
+                    Tidak ada catatan untuk tanggal ini
+                  </div>
+                ) : (
+                  filteredDailyRecords.map((record) => (
+                    <div
+                      key={record.id}
+                      className="p-6 transition-colors hover:bg-slate-50"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                            record.status === "Selesai"
+                              ? "bg-green-100"
+                              : record.status === "Terlewat"
+                                ? "bg-red-100"
+                                : "bg-orange-100"
                           }`}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <div className="mb-2 flex items-start justify-between">
-                          <div>
-                            <div className="text-[#001B34]">{task.task}</div>
-                            <div className="text-sm text-slate-600">
-                              {task.kandang}
-                            </div>
-                          </div>
-                          <span
-                            className={`rounded-full px-3 py-1 text-xs ${
-                              task.status === "Done"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-orange-100 text-orange-700"
+                        >
+                          <ClipboardList
+                            className={`h-5 w-5 ${
+                              record.status === "Selesai"
+                                ? "text-green-600"
+                                : record.status === "Terlewat"
+                                  ? "text-red-600"
+                                  : "text-orange-600"
                             }`}
-                          >
-                            {task.status}
-                          </span>
+                          />
                         </div>
-                        <div className="text-sm text-slate-500">
-                          Waktu: {task.time}
+                        <div className="flex-1">
+                          <div className="mb-2 flex items-start justify-between">
+                            <div>
+                              <div className="text-[#001B34]">{record.task}</div>
+                              <div className="text-sm text-slate-600">
+                                {record.kandangName}
+                              </div>
+                            </div>
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs ${
+                                record.status === "Selesai"
+                                  ? "bg-green-100 text-green-700"
+                                  : record.status === "Terlewat"
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-orange-100 text-orange-700"
+                              }`}
+                            >
+                              {record.status}
+                            </span>
+                          </div>
+                          <div className="mb-2 text-sm text-slate-500">
+                            Waktu: {record.time}
+                          </div>
+                          {record.notes && (
+                            <div className="text-sm text-slate-600">
+                              Catatan: {record.notes}
+                            </div>
+                          )}
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditDaily(record)}
+                              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50"
+                            >
+                              <Edit className="mr-1 inline h-3 w-3" />
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteDailyRecord(record.id)}
+                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="mr-1 inline h-3 w-3" />
+                              Hapus
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -745,10 +1018,6 @@ export function OperatorDashboard() {
 
         {activeTab === "reports" && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl text-[#001B34]">Laporan & Analitik</h2>
-              <p className="text-slate-600">Visualisasi performa kandang</p>
-            </div>
 
             <div className="grid gap-6 md:grid-cols-3">
               {[
@@ -826,6 +1095,369 @@ export function OperatorDashboard() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Modal Kandang */}
+      {(modalMode === "create-kandang" || modalMode === "edit-kandang" || modalMode === "view-kandang") && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+              <h3 className="text-xl font-semibold text-[#001B34]">
+                {modalMode === "create-kandang"
+                  ? "Tambah Kandang Baru"
+                  : modalMode === "edit-kandang"
+                    ? "Edit Kandang"
+                    : "Detail Kandang"}
+              </h3>
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-y-auto p-6">
+              {modalMode === "view-kandang" && selectedKandang ? (
+                <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {[
+                      { label: "Nama Kandang", value: selectedKandang.name },
+                      { label: "ID Kandang", value: selectedKandang.id },
+                      { label: "Populasi", value: selectedKandang.population.toLocaleString() },
+                      { label: "Usia", value: `${selectedKandang.age} hari` },
+                      { label: "Status", value: selectedKandang.status },
+                      { label: "Suhu", value: selectedKandang.temp },
+                      { label: "Kelembaban", value: selectedKandang.humidity },
+                      { label: "Dibuat", value: new Date(selectedKandang.createdAt).toLocaleString("id-ID") },
+                    ].map((item) => (
+                      <div key={item.label}>
+                        <label className="mb-2 block text-sm text-slate-600">
+                          {item.label}
+                        </label>
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-[#001B34]">
+                          {item.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => selectedKandang && handleOpenEditKandang(selectedKandang)}
+                      className="flex-1 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-white transition-all hover:shadow-lg"
+                    >
+                      Edit Kandang
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectedKandang && handleDeleteKandang(selectedKandang.id)}
+                      className="flex-1 rounded-lg border border-red-500 bg-white px-4 py-2.5 text-red-600 transition-all hover:bg-red-50"
+                    >
+                      Hapus Kandang
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSaveKandang();
+                  }}
+                  className="space-y-4"
+                >
+                  {error && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                      <p className="text-sm text-red-800">{error}</p>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="mb-2 block text-sm text-slate-600">
+                      Nama Kandang <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={kandangFormData.name}
+                      onChange={(e) =>
+                        setKandangFormData({ ...kandangFormData, name: e.target.value })
+                      }
+                      placeholder="Contoh: Kandang A1"
+                      className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 px-4 text-base text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">
+                        Populasi <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="1"
+                        value={kandangFormData.population || ""}
+                        onChange={(e) =>
+                          setKandangFormData({ ...kandangFormData, population: parseInt(e.target.value) || 0 })
+                        }
+                        className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 px-4 text-base text-slate-900 focus:border-orange-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">
+                        Usia (hari) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        value={kandangFormData.age || ""}
+                        onChange={(e) =>
+                          setKandangFormData({ ...kandangFormData, age: parseInt(e.target.value) || 0 })
+                        }
+                        className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 px-4 text-base text-slate-900 focus:border-orange-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">
+                        Suhu <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={kandangFormData.temp}
+                        onChange={(e) =>
+                          setKandangFormData({ ...kandangFormData, temp: e.target.value })
+                        }
+                        placeholder="Contoh: 28°C"
+                        className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 px-4 text-base text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">
+                        Kelembaban <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={kandangFormData.humidity}
+                        onChange={(e) =>
+                          setKandangFormData({ ...kandangFormData, humidity: e.target.value })
+                        }
+                        placeholder="Contoh: 65%"
+                        className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 px-4 text-base text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm text-slate-600">
+                      Status <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={kandangFormData.status}
+                      onChange={(e) =>
+                        setKandangFormData({
+                          ...kandangFormData,
+                          status: e.target.value as "Optimal" | "Peringatan" | "Kritis",
+                        })
+                      }
+                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-base text-slate-900 focus:border-orange-500 focus:outline-none"
+                    >
+                      <option value="Optimal">Optimal</option>
+                      <option value="Peringatan">Peringatan</option>
+                      <option value="Kritis">Kritis</option>
+                    </select>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-slate-700 transition-all hover:bg-slate-50"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-white transition-all hover:shadow-lg"
+                    >
+                      <Save className="mr-2 inline h-4 w-4" />
+                      {modalMode === "create-kandang" ? "Tambah Kandang" : "Simpan Perubahan"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Daily Record */}
+      {(modalMode === "create-daily" || modalMode === "edit-daily") && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+              <h3 className="text-xl font-semibold text-[#001B34]">
+                {modalMode === "create-daily" ? "Tambah Catatan Harian" : "Edit Catatan Harian"}
+              </h3>
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-y-auto p-6">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSaveDailyRecord();
+                }}
+                className="space-y-4"
+              >
+                {error && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                )}
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm text-slate-600">
+                      Tanggal <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={recordFormData.date}
+                      onChange={(e) =>
+                        setRecordFormData({ ...recordFormData, date: e.target.value })
+                      }
+                      className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 px-4 text-base text-slate-900 focus:border-orange-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm text-slate-600">
+                      Waktu <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="time"
+                      required
+                      value={recordFormData.time}
+                      onChange={(e) =>
+                        setRecordFormData({ ...recordFormData, time: e.target.value })
+                      }
+                      className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 px-4 text-base text-slate-900 focus:border-orange-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-slate-600">
+                    Kandang <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={recordFormData.kandangId}
+                    onChange={(e) => {
+                      const kandang = kandangs.find((k) => k.id === e.target.value);
+                      setRecordFormData({
+                        ...recordFormData,
+                        kandangId: e.target.value,
+                        kandangName: kandang?.name || "",
+                      });
+                    }}
+                    className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-base text-slate-900 focus:border-orange-500 focus:outline-none"
+                  >
+                    <option value="">Pilih Kandang</option>
+                    {kandangs.map((kandang) => (
+                      <option key={kandang.id} value={kandang.id}>
+                        {kandang.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-slate-600">
+                    Nama Tugas <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={recordFormData.task}
+                    onChange={(e) =>
+                      setRecordFormData({ ...recordFormData, task: e.target.value })
+                    }
+                    placeholder="Contoh: Pemberian pakan pagi"
+                    className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 px-4 text-base text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-slate-600">
+                    Status <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={recordFormData.status}
+                    onChange={(e) =>
+                      setRecordFormData({
+                        ...recordFormData,
+                        status: e.target.value as "Selesai" | "Menunggu" | "Terlewat",
+                      })
+                    }
+                    className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-base text-slate-900 focus:border-orange-500 focus:outline-none"
+                  >
+                    <option value="Menunggu">Menunggu</option>
+                    <option value="Selesai">Selesai</option>
+                    <option value="Terlewat">Terlewat</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-slate-600">
+                    Catatan
+                  </label>
+                  <textarea
+                    value={recordFormData.notes}
+                    onChange={(e) =>
+                      setRecordFormData({ ...recordFormData, notes: e.target.value })
+                    }
+                    placeholder="Tambahkan catatan tambahan (opsional)"
+                    rows={3}
+                    className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 px-4 text-base text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-slate-700 transition-all hover:bg-slate-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-white transition-all hover:shadow-lg"
+                  >
+                    <Save className="mr-2 inline h-4 w-4" />
+                    {modalMode === "create-daily" ? "Tambah Catatan" : "Simpan Perubahan"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
