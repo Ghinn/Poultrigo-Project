@@ -7,64 +7,65 @@ import {
   Lock,
   Mail,
   User,
-  Phone,
   ArrowLeft,
   Eye,
   EyeOff,
   CheckCircle,
 } from "lucide-react";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
-import { saveUser, getUserByEmail } from "@/utils/auth";
+import { createUser } from "@/actions/users";
 
 export function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
     password: "",
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     // Validasi password
     if (formData.password !== formData.confirmPassword) {
       setError("Kata sandi tidak cocok");
+      setIsLoading(false);
       return;
     }
 
     if (formData.password.length < 8) {
       setError("Kata sandi minimal 8 karakter");
+      setIsLoading(false);
       return;
     }
 
-    // Cek apakah email sudah terdaftar
-    const existingUser = getUserByEmail(formData.email);
-    if (existingUser) {
-      setError("Email sudah terdaftar. Silakan gunakan email lain atau masuk.");
-      return;
-    }
-
-    // Simpan user baru (default role: guest)
     try {
-      saveUser({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        password: formData.password,
-        role: "guest",
-      });
+      const data = new FormData();
+      data.append("name", formData.name);
+      data.append("email", formData.email);
+      data.append("password", formData.password);
+      data.append("role", "guest");
+
+      const result = await createUser(null, data);
+
+      if (result?.error) {
+        setError(result.error);
+        setIsLoading(false);
+        return;
+      }
 
       // Redirect ke login setelah registrasi berhasil
       router.push("/login?registered=true");
-    } catch {
+    } catch (err) {
       setError("Terjadi kesalahan saat mendaftar. Silakan coba lagi.");
+      setIsLoading(false);
     }
   };
 
@@ -217,23 +218,6 @@ export function RegisterPage() {
 
               <div>
                 <label className="mb-2 block text-sm text-slate-600">
-                  Nomor telepon
-                </label>
-                <div className="relative">
-                  <Phone className="pointer-events-none absolute left-4 top-1/2 z-40 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => handleChange("phone", e.target.value)}
-                    placeholder="+62 xxx xxxx xxxx"
-                    className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 pl-12 pr-4 text-base text-slate-900 placeholder:text-slate-400 caret-orange-500 focus:border-orange-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm text-slate-600">
                   Kata sandi
                 </label>
                 <div className="relative">
@@ -308,9 +292,10 @@ export function RegisterPage() {
 
               <button
                 type="submit"
-                className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 py-3.5 text-white transition-all hover:shadow-xl hover:shadow-orange-500/30"
+                disabled={isLoading}
+                className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 py-3.5 text-white transition-all hover:shadow-xl hover:shadow-orange-500/30 disabled:opacity-70"
               >
-                Daftar Sekarang
+                {isLoading ? "Memproses..." : "Daftar Sekarang"}
               </button>
 
               <div className="relative my-6 text-center text-sm text-slate-500">
@@ -332,6 +317,4 @@ export function RegisterPage() {
     </div>
   );
 }
-
 export default RegisterPage;
-
