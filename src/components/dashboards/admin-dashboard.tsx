@@ -91,13 +91,32 @@ export function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderSearchQuery, setOrderSearchQuery] = useState("");
 
+  // Load data functions
+  const loadUsers = async () => {
+    const allUsers = await getUsers();
+    // Map users to include password (required by User type) - we'll use empty string since we don't expose passwords
+    const mappedUsers: User[] = allUsers.map((u: any) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      password: '', // Password is not exposed from getUsers for security
+      role: u.role as "guest" | "operator" | "admin",
+      createdAt: u.createdAt || u.created_at?.toISOString() || new Date().toISOString(),
+      last_login: u.last_login
+    }));
+    setUsers(mappedUsers);
+  };
+
+  const loadOrders = async () => {
+    const allOrders = await getAllOrders();
+    setOrders(allOrders);
+  };
+
   // Load data
   useEffect(() => {
     const loadData = async () => {
-      const allUsers = await getUsers();
-      setUsers(allUsers);
-      const allOrders = await getAllOrders();
-      setOrders(allOrders);
+      await loadUsers();
+      await loadOrders();
     };
     void loadData();
   }, []);
@@ -117,14 +136,14 @@ export function AdminDashboard() {
     order.customer.name.toLowerCase().includes(orderSearchQuery.toLowerCase())
   );
 
-  const handleUpdateOrderStatus = (orderId: number, status: string) => {
+  const handleUpdateOrderStatus = (orderId: string, status: string) => {
     setConfirmModal({
       isOpen: true,
       title: "Konfirmasi Update Status",
       message: `Apakah Anda yakin ingin mengubah status pesanan menjadi ${status}?`,
       onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, isLoading: true }));
-        const res = await updateOrderStatus(orderId.toString(), status);
+        const res = await updateOrderStatus(orderId, status);
         if (res?.success) {
           showToast("Status pesanan berhasil diperbarui", "success");
           loadOrders();
@@ -792,7 +811,7 @@ export function AdminDashboard() {
                               {order.products}
                             </td>
                             <td className="px-6 py-4 text-sm font-medium text-[#001B34]">
-                              Rp {parseFloat(order.total).toLocaleString('id-ID')}
+                              Rp {order.total.toLocaleString('id-ID')}
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-600">
                               {order.date}

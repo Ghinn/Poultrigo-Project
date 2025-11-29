@@ -625,7 +625,7 @@ export function GuestDashboard({
                             <div className="mb-4 flex items-center justify-between text-sm text-slate-600">
                               <span>Stok: {product.stock}</span>
                               <span className="font-semibold text-orange-600">
-                                Rp {parseFloat(product.price).toLocaleString()}
+                                Rp {product.price.toLocaleString()}
                               </span>
                             </div>
                             <button

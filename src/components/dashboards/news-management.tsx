@@ -48,12 +48,13 @@ export function NewsManagement() {
     featuredImage: "",
   });
 
+  const loadNews = async () => {
+    const news = await getNews();
+    setAllNews(news);
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      const news = await getNews();
-      setAllNews(news);
-    };
-    void loadData();
+    void loadNews();
   }, []);
 
   const filteredNews = allNews.filter((article) => {
