@@ -4,9 +4,12 @@ import { useState } from 'react'
 import { updateCart, removeFromCart, checkout } from '@/actions/shop'
 import { Trash, Minus, Plus, ShoppingBag } from 'lucide-react'
 import ImageWithFallback from '@/components/shared/image-with-fallback'
+import { useToast } from "@/components/ui/toast-provider"
 
 export default function CartClient({ cart }: { cart: { items: any[], total: number } }) {
     const [isLoading, setIsLoading] = useState(false)
+
+    const { showToast } = useToast()
 
     async function handleUpdate(cartItemId: number, newQty: number) {
         if (newQty < 1) return
@@ -17,23 +20,27 @@ export default function CartClient({ cart }: { cart: { items: any[], total: numb
 
         const res = await updateCart(null, formData)
         setIsLoading(false)
-        if (res?.error) alert(res.error)
+        if (res?.error) showToast(res.error, "error")
     }
 
     async function handleRemove(id: number) {
         if (!confirm('Remove this item?')) return
         setIsLoading(true)
-        const res = await removeFromCart(id)
+        const res = await removeFromCart(id.toString())
         setIsLoading(false)
-        if (res?.error) alert(res.error)
+        if (res?.error) showToast(res.error, "error")
+        else showToast("Item removed from cart", "success")
     }
 
     async function handleCheckout(formData: FormData) {
         setIsLoading(true)
         const res = await checkout(null, formData)
         setIsLoading(false)
-        if (res?.error) alert(res.error)
-        else if (res?.redirect) window.location.href = res.redirect
+        if (res?.error) showToast(res.error, "error")
+        else if (res?.redirect) {
+            showToast("Order placed successfully! Redirecting...", "success")
+            window.location.href = res.redirect
+        }
     }
 
     if (cart.items.length === 0) {
@@ -120,15 +127,15 @@ export default function CartClient({ cart }: { cart: { items: any[], total: numb
                     <form action={handleCheckout} className="space-y-4">
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700">Full Name</label>
-                            <input name="buyer_name" required className="w-full rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-orange-500" />
+                            <input name="buyer_name" required className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 outline-none focus:border-orange-500" />
                         </div>
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700">Address</label>
-                            <textarea name="address" required rows={3} className="w-full rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-orange-500" />
+                            <textarea name="address" required rows={3} className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 outline-none focus:border-orange-500" />
                         </div>
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700">WhatsApp Number</label>
-                            <input name="whatsapp" required placeholder="e.g. 08123456789" className="w-full rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-orange-500" />
+                            <input name="whatsapp" required placeholder="e.g. 08123456789" className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 outline-none focus:border-orange-500" />
                         </div>
                         <button
                             disabled={isLoading}

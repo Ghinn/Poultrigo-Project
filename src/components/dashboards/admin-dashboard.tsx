@@ -46,6 +46,7 @@ import { getAllOrders, updateOrderStatus } from "@/actions/admin";
 import { logout } from "@/actions/auth";
 import { NewsManagement } from "./news-management";
 import { setCurrentUser, type User } from "@/utils/auth";
+import { useToast } from "@/components/ui/toast-provider";
 
 type ModalMode = "create" | "edit" | "view" | null;
 
@@ -70,6 +71,22 @@ export function AdminDashboard() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { showToast } = useToast();
+
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    isLoading?: boolean;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: async () => { },
+    isLoading: false,
+  });
 
   // Order management state
   const [orders, setOrders] = useState<any[]>([]);
@@ -106,11 +123,23 @@ export function AdminDashboard() {
     order.customer.name.toLowerCase().includes(orderSearchQuery.toLowerCase())
   );
 
-  const handleUpdateOrderStatus = async (orderId: number, status: string) => {
-    if (confirm(`Ubah status pesanan menjadi ${status}?`)) {
-      await updateOrderStatus(orderId, status);
-      loadOrders();
-    }
+  const handleUpdateOrderStatus = (orderId: number, status: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Konfirmasi Update Status",
+      message: `Apakah Anda yakin ingin mengubah status pesanan menjadi ${status}?`,
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isLoading: true }));
+        const res = await updateOrderStatus(orderId.toString(), status);
+        if (res?.success) {
+          showToast("Status pesanan berhasil diperbarui", "success");
+          loadOrders();
+        } else {
+          showToast("Gagal memperbarui status pesanan", "error");
+        }
+        setConfirmModal((prev) => ({ ...prev, isOpen: false, isLoading: false }));
+      },
+    });
   };
 
   const stats = [
@@ -231,16 +260,29 @@ export function AdminDashboard() {
 
     loadUsers();
     handleCloseModal();
+    showToast(modalMode === "create" ? "Pengguna berhasil dibuat" : "Pengguna berhasil diperbarui", "success");
   };
 
-  const handleDelete = async (userId: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus pengguna ini?")) {
-      await deleteUser(userId);
-      loadUsers();
-      if (selectedUser?.id === userId) {
-        handleCloseModal();
-      }
-    }
+  const handleDelete = (userId: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Hapus Pengguna",
+      message: "Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan.",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isLoading: true }));
+        const res = await deleteUser(userId);
+        if (res?.success) {
+          showToast("Pengguna berhasil dihapus", "success");
+          loadUsers();
+          if (selectedUser?.id === userId) {
+            handleCloseModal();
+          }
+        } else {
+          showToast(res?.error || "Gagal menghapus pengguna", "error");
+        }
+        setConfirmModal((prev) => ({ ...prev, isOpen: false, isLoading: false }));
+      },
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -758,12 +800,12 @@ export function AdminDashboard() {
                             <td className="px-6 py-4">
                               <span
                                 className={`inline-flex rounded-full px-3 py-1 text-xs ${order.status === "completed"
-                                    ? "bg-green-100 text-green-700"
-                                    : order.status === "processing"
-                                      ? "bg-blue-100 text-blue-700"
-                                      : order.status === "shipped"
-                                        ? "bg-purple-100 text-purple-700"
-                                        : "bg-orange-100 text-orange-700"
+                                  ? "bg-green-100 text-green-700"
+                                  : order.status === "processing"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : order.status === "shipped"
+                                      ? "bg-purple-100 text-purple-700"
+                                      : "bg-orange-100 text-orange-700"
                                   }`}
                               >
                                 {order.status === "pending" && "Menunggu"}
@@ -1127,6 +1169,43 @@ export function AdminDashboard() {
                     Simpan
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {confirmModal.isOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+              <div className="mb-4 flex items-center gap-3 text-orange-600">
+                <AlertTriangle className="h-6 w-6" />
+                <h3 className="text-lg font-bold text-[#001B34]">
+                  {confirmModal.title}
+                </h3>
+              </div>
+
+              <p className="mb-8 text-slate-600">
+                {confirmModal.message}
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  disabled={confirmModal.isLoading}
+                  onClick={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+                  className="flex-1 rounded-lg border border-slate-200 py-2.5 font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  disabled={confirmModal.isLoading}
+                  onClick={confirmModal.onConfirm}
+                  className="flex-1 rounded-lg bg-orange-500 py-2.5 font-medium text-white transition-all hover:bg-orange-600 hover:shadow-lg disabled:opacity-50"
+                >
+                  {confirmModal.isLoading ? "Memproses..." : "Ya, Lanjutkan"}
+                </button>
               </div>
             </div>
           </div>

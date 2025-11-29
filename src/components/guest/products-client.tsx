@@ -4,9 +4,12 @@ import { useState } from 'react'
 import { addToCart } from '@/actions/shop'
 import { ShoppingCart, Plus } from 'lucide-react'
 import ImageWithFallback from '@/components/shared/image-with-fallback'
+import { useToast } from "@/components/ui/toast-provider"
 
 export default function ProductsClient({ products }: { products: any[] }) {
     const [isLoading, setIsLoading] = useState<number | null>(null)
+
+    const { showToast } = useToast()
 
     async function handleAddToCart(productId: number) {
         setIsLoading(productId)
@@ -17,8 +20,8 @@ export default function ProductsClient({ products }: { products: any[] }) {
         const res = await addToCart(null, formData)
         setIsLoading(null)
 
-        if (res?.error) alert(res.error)
-        else alert(res.success) // Replace with toast
+        if (res?.error) showToast(res.error, "error")
+        else showToast(res.success || "Added to cart", "success")
     }
 
     return (

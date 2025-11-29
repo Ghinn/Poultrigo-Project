@@ -1,7 +1,8 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { pool } from '@/lib/db'
+import dbConnect from '@/lib/mongodb'
+import User from '@/models/User'
 import bcrypt from 'bcryptjs'
 import * as jose from 'jose'
 import { redirect } from 'next/navigation'
@@ -17,13 +18,13 @@ export async function login(prevState: any, formData: FormData) {
     }
 
     try {
-        const [rows]: any = await pool.execute('SELECT * FROM users WHERE email = ?', [email])
+        await dbConnect()
+        const user = await User.findOne({ email })
 
-        if (rows.length === 0) {
+        if (!user) {
             return { error: 'Invalid email or password.' }
         }
 
-        const user = rows[0]
         const isMatch = await bcrypt.compare(password, user.password)
 
         if (!isMatch) {
@@ -31,10 +32,11 @@ export async function login(prevState: any, formData: FormData) {
         }
 
         // Update last login
-        await pool.execute('UPDATE users SET last_login = NOW() WHERE id = ?', [user.id])
+        user.last_login = new Date()
+        await user.save()
 
         const jwt = new jose.SignJWT({
-            id: user.id,
+            id: user.id, // This uses the _id (which is a string in our schema)
             email: user.email,
             role: user.role,
             name: user.name
@@ -53,24 +55,37 @@ export async function login(prevState: any, formData: FormData) {
             path: '/',
         })
 
+        // Redirect based on role
+        if (user.role === 'admin') redirect('/admin')
+        else if (user.role === 'operator') redirect('/operator')
+        else if (user.role === 'guest') redirect('/guest')
+        else redirect('/')
+
     } catch (err) {
+        if ((err as Error).message === 'NEXT_REDIRECT') {
+            throw err
+        }
         console.error('Login error:', err)
         return { error: `System error: ${(err as Error).message}` }
     }
-
-    // We need to redirect outside the try-catch block because redirect throws an error
-    // Re-fetch user to get role for redirect (or use the one we have)
-    const [rows]: any = await pool.execute('SELECT role FROM users WHERE email = ?', [email])
-    const role = rows[0].role
-
-    if (role === 'admin') redirect('/admin')
-    else if (role === 'operator') redirect('/operator')
-    else if (role === 'guest') redirect('/guest')
-    else redirect('/')
 }
 
 export async function logout() {
     const cookieStore = await cookies()
     cookieStore.delete('session')
     redirect('/')
+}
+
+export async function getSession() {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('session')?.value
+
+    if (!token) return null
+
+    try {
+        const { payload } = await jose.jwtVerify(token, SECRET)
+        return payload
+    } catch (err) {
+        return null
+    }
 }

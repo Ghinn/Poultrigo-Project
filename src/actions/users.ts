@@ -1,14 +1,18 @@
 'use server'
 
-import { pool } from '@/lib/db'
-import { User } from '@/utils/auth'
+import dbConnect from '@/lib/mongodb'
+import User from '@/models/User'
 import bcrypt from 'bcryptjs'
 import { revalidatePath } from 'next/cache'
 
 export async function getUsers() {
     try {
-        const [rows]: any = await pool.execute('SELECT * FROM users ORDER BY created_at DESC')
-        return rows as User[]
+        await dbConnect()
+        const users = await User.find({}).sort({ created_at: -1 }).lean()
+        // Map _id to id to match interface if needed, but User model uses string _id manually set as id.
+        // Wait, my User model has `_id: { type: String }`. So `_id` IS the id.
+        // But Mongoose returns `_id`.
+        return users.map((u: any) => ({ ...u, id: u._id })) as any[]
     } catch (error) {
         console.error('Failed to fetch users:', error)
         return []
@@ -26,19 +30,24 @@ export async function createUser(prevState: any, formData: FormData) {
     }
 
     try {
+        await dbConnect()
         // Check if user exists
-        const [existing]: any = await pool.execute('SELECT id FROM users WHERE email = ?', [email])
-        if (existing.length > 0) {
+        const existing = await User.findOne({ email })
+        if (existing) {
             return { error: 'Email already registered' }
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
         const id = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-        await pool.execute(
-            'INSERT INTO users (id, name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-            [id, name, email, hashedPassword, role]
-        )
+        await User.create({
+            _id: id,
+            name,
+            email,
+            password: hashedPassword,
+            role,
+            created_at: new Date()
+        })
 
         revalidatePath('/admin')
         return { success: true }
@@ -60,24 +69,19 @@ export async function updateUser(prevState: any, formData: FormData) {
     }
 
     try {
+        await dbConnect()
         // Check if email is taken by another user
-        const [existing]: any = await pool.execute('SELECT id FROM users WHERE email = ? AND id != ?', [email, id])
-        if (existing.length > 0) {
+        const existing = await User.findOne({ email, _id: { $ne: id } })
+        if (existing) {
             return { error: 'Email already registered' }
         }
 
+        const updateData: any = { name, email, role }
         if (password) {
-            const hashedPassword = await bcrypt.hash(password, 10)
-            await pool.execute(
-                'UPDATE users SET name = ?, email = ?, role = ?, password = ? WHERE id = ?',
-                [name, email, role, hashedPassword, id]
-            )
-        } else {
-            await pool.execute(
-                'UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?',
-                [name, email, role, id]
-            )
+            updateData.password = await bcrypt.hash(password, 10)
         }
+
+        await User.findByIdAndUpdate(id, updateData)
 
         revalidatePath('/admin')
         return { success: true }
@@ -89,7 +93,8 @@ export async function updateUser(prevState: any, formData: FormData) {
 
 export async function deleteUser(id: string) {
     try {
-        await pool.execute('DELETE FROM users WHERE id = ?', [id])
+        await dbConnect()
+        await User.findByIdAndDelete(id)
         revalidatePath('/admin')
         return { success: true }
     } catch (error) {

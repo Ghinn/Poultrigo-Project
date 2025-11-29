@@ -37,6 +37,7 @@ import useIsClient from "@/hooks/use-is-client";
 import { setCurrentUser } from "@/utils/auth";
 import { logout } from "@/actions/auth";
 import { addToCart, updateCart, removeFromCart, checkout } from "@/actions/shop";
+import { useToast } from "@/components/ui/toast-provider";
 
 type GuestTab = "overview" | "products" | "orders" | "cart";
 
@@ -80,6 +81,7 @@ export function GuestDashboard({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
   const [cartLoading, setCartLoading] = useState(false);
+  const { showToast } = useToast();
 
   const handleAddToCart = async (productId: number) => {
     setAddingToCart(productId);
@@ -90,13 +92,13 @@ export function GuestDashboard({
 
       const result = await addToCart(null, formData);
       if (result?.error) {
-        alert(result.error);
+        showToast(result.error, "error");
       } else {
-        alert("Produk berhasil ditambahkan ke keranjang!");
+        showToast("Produk berhasil ditambahkan ke keranjang!", "success");
         router.refresh();
       }
     } catch (error) {
-      alert("Gagal menambahkan ke keranjang");
+      showToast("Gagal menambahkan ke keranjang", "error");
     } finally {
       setAddingToCart(null);
     }
@@ -111,7 +113,7 @@ export function GuestDashboard({
 
     const res = await updateCart(null, formData);
     setCartLoading(false);
-    if (res?.error) alert(res.error);
+    if (res?.error) showToast(res.error, "error");
     else router.refresh();
   };
 
@@ -120,7 +122,7 @@ export function GuestDashboard({
     setCartLoading(true);
     const res = await removeFromCart(id);
     setCartLoading(false);
-    if (res?.error) alert(res.error);
+    if (res?.error) showToast(res.error, "error");
     else router.refresh();
   };
 
@@ -128,9 +130,9 @@ export function GuestDashboard({
     setCartLoading(true);
     const res = await checkout(null, formData);
     setCartLoading(false);
-    if (res?.error) alert(res.error);
+    if (res?.error) showToast(res.error, "error");
     else if (res?.redirect) {
-      alert(res.success);
+      showToast(res.success || "Pesanan berhasil dibuat!", "success");
       setActiveTab('orders');
       router.refresh();
     }

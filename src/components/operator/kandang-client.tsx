@@ -3,26 +3,35 @@
 import { useState } from 'react'
 import { addKandang, updateKandang } from '@/actions/kandang'
 import { Home, Plus, Edit, X, Users, Calendar } from 'lucide-react'
+import { useToast } from "@/components/ui/toast-provider"
 
 export default function KandangClient({ kandang }: { kandang: any[] }) {
     const [isAddOpen, setIsAddOpen] = useState(false)
     const [editingKandang, setEditingKandang] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(false)
 
+    const { showToast } = useToast()
+
     async function handleAdd(formData: FormData) {
         setIsLoading(true)
         const res = await addKandang(null, formData)
         setIsLoading(false)
-        if (res?.error) alert(res.error)
-        else setIsAddOpen(false)
+        if (res?.error) showToast(res.error, "error")
+        else {
+            setIsAddOpen(false)
+            showToast("Kandang berhasil ditambahkan!", "success")
+        }
     }
 
     async function handleUpdate(formData: FormData) {
         setIsLoading(true)
         const res = await updateKandang(null, formData)
         setIsLoading(false)
-        if (res?.error) alert(res.error)
-        else setEditingKandang(null)
+        if (res?.error) showToast(res.error, "error")
+        else {
+            setEditingKandang(null)
+            showToast("Kandang berhasil diperbarui!", "success")
+        }
     }
 
     return (
@@ -95,7 +104,7 @@ export default function KandangClient({ kandang }: { kandang: any[] }) {
                         <form action={handleAdd} className="space-y-4">
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-slate-700">Kandang Name</label>
-                                <input name="name" required placeholder="e.g. Kandang A" className="w-full rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-orange-500" />
+                                <input name="name" required placeholder="e.g. Kandang A" className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 outline-none focus:border-orange-500" />
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
                                 <button type="button" onClick={() => setIsAddOpen(false)} className="rounded-lg px-4 py-2 text-slate-600 hover:bg-slate-50">Cancel</button>
@@ -122,11 +131,11 @@ export default function KandangClient({ kandang }: { kandang: any[] }) {
                             <input type="hidden" name="id" value={editingKandang.id} />
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-slate-700">Population</label>
-                                <input name="population" type="number" defaultValue={editingKandang.population} required className="w-full rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-orange-500" />
+                                <input name="population" type="number" defaultValue={editingKandang.population} required className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 outline-none focus:border-orange-500" />
                             </div>
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-slate-700">Age (Days)</label>
-                                <input name="age" type="number" defaultValue={editingKandang.age} required className="w-full rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-orange-500" />
+                                <input name="age" type="number" defaultValue={editingKandang.age} required className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 outline-none focus:border-orange-500" />
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
                                 <button type="button" onClick={() => setEditingKandang(null)} className="rounded-lg px-4 py-2 text-slate-600 hover:bg-slate-50">Cancel</button>

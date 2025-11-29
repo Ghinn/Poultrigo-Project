@@ -3,17 +3,21 @@
 import { useState } from 'react'
 import { updateOrderStatus } from '@/actions/orders'
 import { Package, ChevronDown, ChevronUp, MapPin, Phone, User } from 'lucide-react'
+import { useToast } from "@/components/ui/toast-provider"
 
 export default function OrdersClient({ orders }: { orders: any[] }) {
     const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null)
     const [isLoading, setIsLoading] = useState(false)
 
+    const { showToast } = useToast()
+
     async function handleStatusChange(id: number, newStatus: string) {
         if (isLoading) return
         setIsLoading(true)
-        const res = await updateOrderStatus(id, newStatus)
+        const res = await updateOrderStatus(id.toString(), newStatus)
         setIsLoading(false)
-        if (res?.error) alert(res.error)
+        if (res?.error) showToast(res.error, "error")
+        else showToast("Order status updated", "success")
     }
 
     const toggleOrder = (id: number) => {
@@ -52,10 +56,10 @@ export default function OrdersClient({ orders }: { orders: any[] }) {
                                     onChange={(e) => handleStatusChange(order.id, e.target.value)}
                                     disabled={isLoading}
                                     className={`rounded-lg border px-3 py-1.5 text-sm font-medium outline-none focus:ring-2 focus:ring-orange-500/20 ${order.status === 'pending' ? 'border-yellow-200 bg-yellow-50 text-yellow-700' :
-                                            order.status === 'processing' ? 'border-blue-200 bg-blue-50 text-blue-700' :
-                                                order.status === 'shipped' ? 'border-purple-200 bg-purple-50 text-purple-700' :
-                                                    order.status === 'completed' ? 'border-green-200 bg-green-50 text-green-700' :
-                                                        'border-red-200 bg-red-50 text-red-700'
+                                        order.status === 'processing' ? 'border-blue-200 bg-blue-50 text-blue-700' :
+                                            order.status === 'shipped' ? 'border-purple-200 bg-purple-50 text-purple-700' :
+                                                order.status === 'completed' ? 'border-green-200 bg-green-50 text-green-700' :
+                                                    'border-red-200 bg-red-50 text-red-700'
                                         }`}
                                 >
                                     <option value="pending">Pending</option>

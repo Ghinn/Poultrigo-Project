@@ -1,14 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { addUser, updateUser, deleteUser } from '@/actions/users'
+import { createUser, updateUser, deleteUser } from '@/actions/users'
 import { Plus, Edit, Trash, X, Save, Search } from 'lucide-react'
+import { useToast } from "@/components/ui/toast-provider"
 
 export default function UsersClient({ users }: { users: any[] }) {
     const [isAddOpen, setIsAddOpen] = useState(false)
     const [editingUser, setEditingUser] = useState<any>(null)
     const [searchTerm, setSearchTerm] = useState('')
     const [isLoading, setIsLoading] = useState(false)
+
+    const { showToast } = useToast()
 
     const filteredUsers = users.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -17,12 +20,12 @@ export default function UsersClient({ users }: { users: any[] }) {
 
     async function handleAdd(formData: FormData) {
         setIsLoading(true)
-        const res = await addUser(null, formData)
+        const res = await createUser(null, formData)
         setIsLoading(false)
-        if (res?.error) alert(res.error)
+        if (res?.error) showToast(res.error, "error")
         else {
             setIsAddOpen(false)
-            // Optional: Toast success
+            showToast("User created successfully", "success")
         }
     }
 
@@ -30,16 +33,18 @@ export default function UsersClient({ users }: { users: any[] }) {
         setIsLoading(true)
         const res = await updateUser(null, formData)
         setIsLoading(false)
-        if (res?.error) alert(res.error)
+        if (res?.error) showToast(res.error, "error")
         else {
             setEditingUser(null)
+            showToast("User updated successfully", "success")
         }
     }
 
-    async function handleDelete(id: number) {
+    async function handleDelete(id: string) {
         if (!confirm('Are you sure you want to delete this user?')) return
         const res = await deleteUser(id)
-        if (res?.error) alert(res.error)
+        if (res?.error) showToast(res.error, "error")
+        else showToast("User deleted successfully", "success")
     }
 
     return (
@@ -89,8 +94,8 @@ export default function UsersClient({ users }: { users: any[] }) {
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                                            user.role === 'operator' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-green-100 text-green-800'
+                                        user.role === 'operator' ? 'bg-blue-100 text-blue-800' :
+                                            'bg-green-100 text-green-800'
                                         }`}>
                                         {user.role}
                                     </span>

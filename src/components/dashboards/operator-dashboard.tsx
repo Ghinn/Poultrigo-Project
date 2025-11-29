@@ -29,7 +29,9 @@ import {
   Save,
   Menu,
   Newspaper,
+  Calculator,
 } from "lucide-react";
+import { FeedPrediction } from "@/components/operator/feed-prediction";
 import {
   LineChart,
   Line,
@@ -67,7 +69,7 @@ export function OperatorDashboard() {
   const router = useRouter();
   const isClient = useIsClient();
   const [activeTab, setActiveTab] = useState<
-    "overview" | "kandang" | "monitoring" | "daily" | "reports" | "news"
+    "overview" | "kandang" | "monitoring" | "daily" | "reports" | "news" | "prediction"
   >("overview");
 
   // CRUD State for Kandang
@@ -383,7 +385,9 @@ export function OperatorDashboard() {
               { id: "kandang", label: "Kelola Kandang", icon: Home },
               { id: "monitoring", label: "Monitoring Sensor", icon: Activity },
               { id: "daily", label: "Data Harian", icon: Calendar },
+              { id: "daily", label: "Data Harian", icon: Calendar },
               { id: "reports", label: "Laporan", icon: BarChart3 },
+              { id: "prediction", label: "Prediksi Pakan", icon: Calculator },
               { id: "news", label: "Berita", icon: Newspaper, route: "/news" },
             ].map((tab) => (
               <button
@@ -440,19 +444,8 @@ export function OperatorDashboard() {
               </button>
               <div>
                 <h1 className="text-lg font-semibold text-[#001B34] sm:text-xl">
-                  {activeTab === "overview" && "Beranda"}
-                  {activeTab === "kandang" && "Kelola Kandang"}
-                  {activeTab === "monitoring" && "Monitoring Sensor"}
-                  {activeTab === "daily" && "Data Harian"}
-                  {activeTab === "reports" && "Laporan"}
+                  {activeTab === "prediction" && "Prediksi Pakan"}
                 </h1>
-                <p className="hidden text-xs text-slate-500 sm:block sm:text-sm">
-                  {activeTab === "overview" && "Dashboard manajemen kandang"}
-                  {activeTab === "kandang" && "Manajemen data kandang dan populasi ayam"}
-                  {activeTab === "monitoring" && "Pemantauan sensor real-time"}
-                  {activeTab === "daily" && "Manajemen data harian kandang"}
-                  {activeTab === "reports" && "Laporan dan analitik"}
-                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
@@ -751,9 +744,6 @@ export function OperatorDashboard() {
                           <div className="text-lg text-[#001B34]">
                             {kandang.name}
                           </div>
-                          <div className="text-sm text-slate-500">
-                            {kandang.id}
-                          </div>
                         </div>
                       </div>
                       <span
@@ -787,7 +777,7 @@ export function OperatorDashboard() {
                       <button
                         type="button"
                         onClick={() => handleOpenViewKandang(kandang)}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 transition-colors hover:bg-slate-50"
+                        className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-slate-600 transition-colors hover:bg-slate-50"
                       >
                         <Eye className="h-4 w-4" />
                         Detail
@@ -1253,6 +1243,10 @@ export function OperatorDashboard() {
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === "prediction" && (
+          <FeedPrediction />
         )}
 
         {/* Modal Daily Record */}

@@ -1,34 +1,37 @@
 'use server'
 
-import { pool } from '@/lib/db'
+import dbConnect from '@/lib/mongodb'
+import Order from '@/models/Order'
+import User from '@/models/User' // Ensure User model is imported for population if needed
 import { revalidatePath } from 'next/cache'
 
 export async function getAllOrders() {
     try {
-        const [orders]: any = await pool.execute(`
-            SELECT o.id, o.order_number, o.created_at, o.total_amount, o.status, o.buyer_name, o.address, o.whatsapp,
-                   u.email as user_email,
-                   GROUP_CONCAT(CONCAT(oi.product_name, ' (', oi.quantity, ')') SEPARATOR ', ') as products
-            FROM orders o
-            JOIN users u ON o.user_id = u.id
-            JOIN order_items oi ON o.id = oi.order_id
-            GROUP BY o.id
-            ORDER BY o.created_at DESC
-        `)
+        await dbConnect()
+        // Populate user details. Items are embedded in Order.
+        const orders = await Order.find({})
+            .populate('user_id', 'email') // Populate email from User model
+            .sort({ created_at: -1 })
+            .lean()
 
         return orders.map((order: any) => ({
-            id: order.id,
+            id: order._id.toString(), // Use _id or order_number depending on frontend expectation. SQL used id (int). 
+            // The frontend likely expects `id` to be passed to updateOrderStatus.
+            // Let's check updateOrderStatus signature: it takes `orderId: number`.
+            // This is a problem. Mongo IDs are strings.
+            // I should update the frontend or change the signature.
+            // For now, I will cast to string in the map, but the function signature in `updateOrderStatus` needs to change to string.
             orderNumber: order.order_number,
             date: new Date(order.created_at).toLocaleDateString('id-ID', {
                 day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
             }),
             customer: {
                 name: order.buyer_name,
-                email: order.user_email,
+                email: order.user_id?.email || 'N/A', // Access populated email
                 whatsapp: order.whatsapp,
                 address: order.address
             },
-            products: order.products,
+            products: order.items.map((item: any) => `${item.product_name} (${item.quantity})`).join(', '),
             total: order.total_amount,
             status: order.status
         }))
@@ -38,9 +41,10 @@ export async function getAllOrders() {
     }
 }
 
-export async function updateOrderStatus(orderId: number, status: string) {
+export async function updateOrderStatus(orderId: string, status: string) {
     try {
-        await pool.execute('UPDATE orders SET status = ? WHERE id = ?', [status, orderId])
+        await dbConnect()
+        await Order.findByIdAndUpdate(orderId, { status })
         revalidatePath('/admin')
         return { success: true }
     } catch (error) {
