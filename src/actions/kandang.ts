@@ -3,22 +3,28 @@
 import dbConnect from '@/lib/mongodb'
 import Kandang from '@/models/Kandang'
 import KandangHistory from '@/models/KandangHistory'
-import mongoose from 'mongoose'
 import { revalidatePath } from 'next/cache'
+
+interface KandangDocument {
+    _id: { toString(): string };
+    name: string;
+    population?: number;
+    age?: number;
+}
 
 export async function getKandang() {
     try {
         await dbConnect()
         const kandang = await Kandang.find({}).sort({ name: 1 }).lean()
         // Map _id to id if needed.
-        return kandang.map((k: any) => ({ ...k, id: k._id.toString() }))
+        return kandang.map((k: KandangDocument) => ({ ...k, id: k._id.toString() }))
     } catch (err) {
         console.error(err)
         return []
     }
 }
 
-export async function addKandang(prevState: any, formData: FormData) {
+export async function addKandang(prevState: { error?: string; success?: string } | null, formData: FormData) {
     const name = formData.get('name') as string
 
     try {
@@ -45,7 +51,7 @@ export async function addKandang(prevState: any, formData: FormData) {
     }
 }
 
-export async function updateKandang(prevState: any, formData: FormData) {
+export async function updateKandang(prevState: { error?: string; success?: string } | null, formData: FormData) {
     const id = formData.get('id') as string
     const population = parseInt(formData.get('population') as string)
     const age = parseInt(formData.get('age') as string)

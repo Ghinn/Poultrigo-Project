@@ -5,13 +5,33 @@ import { updateOrderStatus } from '@/actions/orders'
 import { Package, ChevronDown, ChevronUp, MapPin, Phone, User } from 'lucide-react'
 import { useToast } from "@/components/ui/toast-provider"
 
-export default function OrdersClient({ orders }: { orders: any[] }) {
-    const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null)
+interface OrderItem {
+    product_name: string;
+    price: number;
+    quantity: number;
+    subtotal: number;
+}
+
+interface Order {
+    id: string;
+    order_number: string;
+    created_at: string;
+    total_amount: number;
+    status: string;
+    items: OrderItem[];
+    buyer_name: string;
+    user_email: string;
+    address: string;
+    whatsapp: string;
+}
+
+export default function OrdersClient({ orders }: { orders: Order[] }) {
+    const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(false)
 
     const { showToast } = useToast()
 
-    async function handleStatusChange(id: number, newStatus: string) {
+    async function handleStatusChange(id: string, newStatus: string) {
         if (isLoading) return
         setIsLoading(true)
         const res = await updateOrderStatus(id.toString(), newStatus)
@@ -20,7 +40,7 @@ export default function OrdersClient({ orders }: { orders: any[] }) {
         else showToast("Order status updated", "success")
     }
 
-    const toggleOrder = (id: number) => {
+    const toggleOrder = (id: string) => {
         setExpandedOrderId(expandedOrderId === id ? null : id)
     }
 
@@ -116,7 +136,7 @@ export default function OrdersClient({ orders }: { orders: any[] }) {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
-                                            {order.items.map((item: any, idx: number) => (
+                                            {order.items.map((item: OrderItem, idx: number) => (
                                                 <tr key={idx}>
                                                     <td className="px-4 py-2 text-slate-900">{item.product_name}</td>
                                                     <td className="px-4 py-2 text-slate-500">Rp {item.price.toLocaleString()}</td>

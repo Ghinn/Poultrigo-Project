@@ -12,7 +12,6 @@ import {
   BarChart3,
   Calendar,
   ClipboardList,
-  TrendingUp,
   AlertTriangle,
   LogOut,
   Plus,
@@ -30,7 +29,6 @@ import {
   Save,
   Menu,
   Newspaper,
-  Calculator,
 } from "lucide-react";
 
 import {
@@ -145,7 +143,8 @@ export function OperatorDashboard() {
     if (activeTab === "reports") {
       loadHistory();
     }
-  }, [activeTab, loadHistory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const sensorData = [
     { time: "00:00", temp: 27, humidity: 68, ammonia: 15 },

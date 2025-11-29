@@ -2,8 +2,25 @@
 
 import dbConnect from '@/lib/mongodb'
 import Order from '@/models/Order'
-import User from '@/models/User' // Ensure User model is imported for population if needed
 import { revalidatePath } from 'next/cache'
+
+interface OrderItem {
+    product_name: string;
+    quantity: number;
+}
+
+interface OrderDocument {
+    _id: { toString(): string };
+    order_number: string;
+    created_at: Date;
+    buyer_name: string;
+    user_id?: { email?: string } | string;
+    whatsapp: string;
+    address: string;
+    items: OrderItem[];
+    total_amount: number;
+    status: string;
+}
 
 export async function getAllOrders() {
     try {
@@ -14,24 +31,19 @@ export async function getAllOrders() {
             .sort({ created_at: -1 })
             .lean()
 
-        return orders.map((order: any) => ({
-            id: order._id.toString(), // Use _id or order_number depending on frontend expectation. SQL used id (int). 
-            // The frontend likely expects `id` to be passed to updateOrderStatus.
-            // Let's check updateOrderStatus signature: it takes `orderId: number`.
-            // This is a problem. Mongo IDs are strings.
-            // I should update the frontend or change the signature.
-            // For now, I will cast to string in the map, but the function signature in `updateOrderStatus` needs to change to string.
+        return orders.map((order: OrderDocument) => ({
+            id: order._id.toString(),
             orderNumber: order.order_number,
             date: new Date(order.created_at).toLocaleDateString('id-ID', {
                 day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
             }),
             customer: {
                 name: order.buyer_name,
-                email: order.user_id?.email || 'N/A', // Access populated email
+                email: (typeof order.user_id === 'object' && order.user_id?.email) || 'N/A',
                 whatsapp: order.whatsapp,
                 address: order.address
             },
-            products: order.items.map((item: any) => `${item.product_name} (${item.quantity})`).join(', '),
+            products: order.items.map((item: OrderItem) => `${item.product_name} (${item.quantity})`).join(', '),
             total: order.total_amount,
             status: order.status
         }))

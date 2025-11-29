@@ -9,14 +9,9 @@ import {
   ArrowLeft,
   Eye,
   EyeOff,
-  Shield,
-  Gauge,
-  User,
 } from "lucide-react";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
 import { login } from "@/actions/auth";
-
-type RoleOption = "guest" | "operator" | "admin";
 
 export function LoginPage() {
   const router = useRouter();

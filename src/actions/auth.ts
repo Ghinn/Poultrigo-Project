@@ -9,7 +9,7 @@ import { redirect } from 'next/navigation'
 
 const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET || 'dev-secret-key')
 
-export async function login(prevState: any, formData: FormData) {
+export async function login(prevState: { error?: string } | null, formData: FormData) {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 
@@ -85,7 +85,7 @@ export async function getSession() {
     try {
         const { payload } = await jose.jwtVerify(token, SECRET)
         return payload
-    } catch (err) {
+    } catch {
         return null
     }
 }

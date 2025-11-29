@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Plus,
@@ -17,6 +16,7 @@ import {
   FileText,
   Upload,
 } from "lucide-react";
+import { type NewsArticle } from "@/utils/news";
 import {
   getNews,
   deleteNews,
@@ -29,13 +29,12 @@ import { useToast } from "@/components/ui/toast-provider";
 type NewsModalMode = "create" | "edit" | "view" | null;
 
 export function NewsManagement() {
-  const router = useRouter();
   const currentUser = getCurrentUser();
-  const [allNews, setAllNews] = useState<any[]>([]);
+  const [allNews, setAllNews] = useState<NewsArticle[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
   const [modalMode, setModalMode] = useState<NewsModalMode>(null);
-  const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
 
@@ -50,13 +49,12 @@ export function NewsManagement() {
   });
 
   useEffect(() => {
-    loadNews();
+    const loadData = async () => {
+      const news = await getNews();
+      setAllNews(news);
+    };
+    void loadData();
   }, []);
-
-  const loadNews = async () => {
-    const news = await getNews();
-    setAllNews(news);
-  };
 
   const filteredNews = allNews.filter((article) => {
     const matchesSearch =
@@ -86,7 +84,7 @@ export function NewsManagement() {
     setModalMode("create");
   };
 
-  const handleOpenEdit = (article: any) => {
+  const handleOpenEdit = (article: NewsArticle) => {
     setFormData({
       title: article.title,
       excerpt: article.excerpt,
@@ -101,7 +99,7 @@ export function NewsManagement() {
     setModalMode("edit");
   };
 
-  const handleOpenView = (article: any) => {
+  const handleOpenView = (article: NewsArticle) => {
     setSelectedArticle(article);
     setModalMode("view");
   };
@@ -445,7 +443,7 @@ export function NewsManagement() {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          category: e.target.value as any,
+                          category: e.target.value as NewsArticle["category"],
                         })
                       }
                       className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-orange-500 focus:outline-none"

@@ -19,7 +19,7 @@ interface NewsDetailProps {
 
 export default function NewsDetail({ article, allNews, backUrl = "/", backLabel = "Kembali ke Beranda" }: NewsDetailProps) {
   const router = useRouter();
-
+  const { showToast } = useToast();
   const hasIncremented = useRef(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function NewsDetail({ article, allNews, backUrl = "/", backLabel 
       incrementNewsViews(article.id);
       hasIncremented.current = true;
     }
-  }, [article?.id, article?.published]);
+  }, [article]);
 
   if (!article || !article.published) {
     return (
@@ -81,8 +81,6 @@ export default function NewsDetail({ article, allNews, backUrl = "/", backLabel 
     return colors[category] || "bg-slate-100 text-slate-700 border-slate-200";
   };
 
-  const { showToast } = useToast();
-
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -91,7 +89,7 @@ export default function NewsDetail({ article, allNews, backUrl = "/", backLabel 
           text: article.excerpt,
           url: window.location.href,
         });
-      } catch (err) {
+      } catch {
         // User cancelled or error
       }
     } else {

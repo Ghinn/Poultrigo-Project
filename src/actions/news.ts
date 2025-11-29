@@ -6,11 +6,27 @@ import { revalidatePath } from 'next/cache'
 
 import { type NewsArticle } from '@/utils/news'
 
+interface NewsDocument {
+    _id: { toString(): string };
+    createdAt: Date;
+    updatedAt: Date;
+    title: string;
+    content: string;
+    excerpt: string;
+    author: string;
+    authorId: string;
+    category: string;
+    featuredImage?: string;
+    published: boolean;
+    views: number;
+    tags: string[];
+}
+
 export async function getNews(): Promise<NewsArticle[]> {
     try {
         await dbConnect()
         const news = await News.find({}).sort({ createdAt: -1 }).lean()
-        return news.map((item: any) => ({
+        return news.map((item: NewsDocument) => ({
             ...item,
             id: item._id.toString(),
             _id: item._id.toString(),
@@ -28,7 +44,7 @@ export async function getPublishedNews(): Promise<NewsArticle[]> {
     try {
         await dbConnect()
         const news = await News.find({ published: true }).sort({ createdAt: -1 }).lean()
-        return news.map((item: any) => ({
+        return news.map((item: NewsDocument) => ({
             ...item,
             id: item._id.toString(),
             _id: item._id.toString(),
@@ -61,7 +77,7 @@ export async function getNewsById(id: string): Promise<NewsArticle | null> {
     }
 }
 
-export async function createNews(prevState: any, formData: FormData) {
+export async function createNews(prevState: { error?: string; success?: boolean } | null, formData: FormData) {
     try {
         await dbConnect()
 
@@ -91,13 +107,13 @@ export async function createNews(prevState: any, formData: FormData) {
         revalidatePath('/admin')
         revalidatePath('/news')
         return { success: true }
-    } catch (error: any) {
+    } catch (error) {
         console.error('Error creating news:', error)
-        return { error: error.message }
+        return { error: error instanceof Error ? error.message : 'Failed to create news' }
     }
 }
 
-export async function updateNews(prevState: any, formData: FormData) {
+export async function updateNews(prevState: { error?: string; success?: boolean } | null, formData: FormData) {
     try {
         await dbConnect()
 
@@ -110,7 +126,15 @@ export async function updateNews(prevState: any, formData: FormData) {
         const published = formData.get('published') === 'true'
         const featuredImage = formData.get('featuredImage') as string
 
-        const updateData: any = {
+        const updateData: {
+            title: string;
+            excerpt: string;
+            content: string;
+            category: string;
+            tags: string[];
+            published: boolean;
+            featuredImage?: string;
+        } = {
             title,
             excerpt,
             content,
@@ -127,9 +151,9 @@ export async function updateNews(prevState: any, formData: FormData) {
         revalidatePath('/admin')
         revalidatePath('/news')
         return { success: true }
-    } catch (error: any) {
+    } catch (error) {
         console.error('Error updating news:', error)
-        return { error: error.message }
+        return { error: error instanceof Error ? error.message : 'Failed to update news' }
     }
 }
 
@@ -140,9 +164,9 @@ export async function deleteNews(id: string) {
         revalidatePath('/admin')
         revalidatePath('/news')
         return { success: true }
-    } catch (error: any) {
+    } catch (error) {
         console.error('Error deleting news:', error)
-        return { error: error.message }
+        return { error: error instanceof Error ? error.message : 'Failed to delete news' }
     }
 }
 

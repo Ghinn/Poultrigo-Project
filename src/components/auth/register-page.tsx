@@ -63,7 +63,7 @@ export function RegisterPage() {
 
       // Redirect ke login setelah registrasi berhasil
       router.push("/login?registered=true");
-    } catch (err) {
+    } catch {
       setError("Terjadi kesalahan saat mendaftar. Silakan coba lagi.");
       setIsLoading(false);
     }

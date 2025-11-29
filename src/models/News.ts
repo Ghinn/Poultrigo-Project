@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from 'mongoose'
+import { Schema, model, models } from 'mongoose'
 
 const NewsSchema = new Schema({
     title: {
@@ -49,7 +49,7 @@ const NewsSchema = new Schema({
 NewsSchema.set('toJSON', {
     virtuals: true,
     versionKey: false,
-    transform: function (doc, ret: any) {
+    transform: function (doc, ret: Record<string, unknown>) {
         delete ret._id
         return ret
     }
