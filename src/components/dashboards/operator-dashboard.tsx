@@ -31,7 +31,7 @@ import {
   Newspaper,
   Calculator,
 } from "lucide-react";
-import { FeedPrediction } from "@/components/operator/feed-prediction";
+
 import {
   LineChart,
   Line,
@@ -69,7 +69,7 @@ export function OperatorDashboard() {
   const router = useRouter();
   const isClient = useIsClient();
   const [activeTab, setActiveTab] = useState<
-    "overview" | "kandang" | "monitoring" | "daily" | "reports" | "news" | "prediction"
+    "overview" | "kandang" | "monitoring" | "daily" | "reports" | "news"
   >("overview");
 
   // CRUD State for Kandang
@@ -386,7 +386,6 @@ export function OperatorDashboard() {
               { id: "monitoring", label: "Monitoring Sensor", icon: Activity },
               { id: "daily", label: "Data Harian", icon: Calendar },
               { id: "reports", label: "Laporan", icon: BarChart3 },
-              { id: "prediction", label: "Prediksi Pakan", icon: Calculator },
               { id: "news", label: "Berita", icon: Newspaper, route: "/news" },
             ].map((tab) => (
               <button
@@ -443,7 +442,7 @@ export function OperatorDashboard() {
               </button>
               <div>
                 <h1 className="text-lg font-semibold text-[#001B34] sm:text-xl">
-                  {activeTab === "prediction" && "Prediksi Pakan"}
+
                 </h1>
               </div>
             </div>
@@ -1244,9 +1243,7 @@ export function OperatorDashboard() {
           </div>
         )}
 
-        {activeTab === "prediction" && (
-          <FeedPrediction />
-        )}
+
 
         {/* Modal Daily Record */}
         {(modalMode === "create-daily" || modalMode === "edit-daily") && (
