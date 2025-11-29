@@ -385,7 +385,6 @@ export function OperatorDashboard() {
               { id: "kandang", label: "Kelola Kandang", icon: Home },
               { id: "monitoring", label: "Monitoring Sensor", icon: Activity },
               { id: "daily", label: "Data Harian", icon: Calendar },
-              { id: "daily", label: "Data Harian", icon: Calendar },
               { id: "reports", label: "Laporan", icon: BarChart3 },
               { id: "prediction", label: "Prediksi Pakan", icon: Calculator },
               { id: "news", label: "Berita", icon: Newspaper, route: "/news" },
