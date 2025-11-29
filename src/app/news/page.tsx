@@ -1,10 +1,21 @@
 import NewsList from "@/components/news/news-list";
 import { getPublishedNews } from "@/actions/news";
 import { getSession } from "@/actions/auth";
+import { type NewsArticle } from "@/utils/news";
+
+export const dynamic = 'force-dynamic';
 
 export default async function NewsPage() {
-  const allNews = await getPublishedNews();
-  const session = await getSession();
+  let allNews: NewsArticle[] = [];
+  let session = null;
+  
+  try {
+    allNews = await getPublishedNews();
+    session = await getSession();
+  } catch (error) {
+    // Fallback if database connection fails during build
+    console.error('Error loading news:', error);
+  }
 
   let backUrl = "/";
   let backLabel = "Kembali ke Beranda";
