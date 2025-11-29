@@ -6,12 +6,22 @@ import { Trash, Minus, Plus, ShoppingBag } from 'lucide-react'
 import ImageWithFallback from '@/components/shared/image-with-fallback'
 import { useToast } from "@/components/ui/toast-provider"
 
-export default function CartClient({ cart }: { cart: { items: any[], total: number } }) {
+interface CartItem {
+    id: string;
+    quantity: number;
+    product_id: string;
+    name: string;
+    price: number;
+    stock: number;
+    image_url?: string;
+}
+
+export default function CartClient({ cart }: { cart: { items: CartItem[], total: number } }) {
     const [isLoading, setIsLoading] = useState(false)
 
     const { showToast } = useToast()
 
-    async function handleUpdate(cartItemId: number, newQty: number) {
+    async function handleUpdate(cartItemId: string, newQty: number) {
         if (newQty < 1) return
         setIsLoading(true)
         const formData = new FormData()
@@ -50,7 +60,7 @@ export default function CartClient({ cart }: { cart: { items: any[], total: numb
                     <ShoppingBag className="h-10 w-10 text-slate-400" />
                 </div>
                 <h2 className="mb-2 text-2xl font-bold text-slate-900">Your cart is empty</h2>
-                <p className="mb-8 text-slate-500">Looks like you haven't added anything yet.</p>
+                <p className="mb-8 text-slate-500">Looks like you haven&apos;t added anything yet.</p>
                 <a href="/guest/products" className="rounded-lg bg-orange-500 px-6 py-3 font-medium text-white transition hover:bg-orange-600">
                     Start Shopping
                 </a>

@@ -43,12 +43,21 @@ import { useToast } from "@/components/ui/toast-provider";
 type GuestTab = "overview" | "products" | "orders" | "cart";
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   price: number;
   stock: number;
-  image_url: string;
-  description: string;
+  image_url?: string;
+  description?: string;
+  status?: string;
+}
+
+interface Order {
+  id: string;
+  date: string;
+  product: string;
+  quantity: number;
+  total: string;
   status: string;
 }
 
@@ -72,19 +81,19 @@ export function GuestDashboard({
   initialCart = { items: [], total: 0 },
   initialOrders = []
 }: {
-  initialProducts?: any[],
+  initialProducts?: Product[],
   initialCart?: Cart,
-  initialOrders?: any[]
+  initialOrders?: Order[]
 }) {
   const router = useRouter();
   const isClient = useIsClient();
   const [activeTab, setActiveTab] = useState<GuestTab>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [addingToCart, setAddingToCart] = useState<number | null>(null);
+  const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const [cartLoading, setCartLoading] = useState(false);
   const { showToast } = useToast();
 
-  const handleAddToCart = async (productId: number) => {
+  const handleAddToCart = async (productId: string) => {
     setAddingToCart(productId);
     try {
       const formData = new FormData();
@@ -98,7 +107,7 @@ export function GuestDashboard({
         showToast("Produk berhasil ditambahkan ke keranjang!", "success");
         router.refresh();
       }
-    } catch (error) {
+    } catch {
       showToast("Gagal menambahkan ke keranjang", "error");
     } finally {
       setAddingToCart(null);
@@ -590,7 +599,7 @@ export function GuestDashboard({
                         Belum ada produk yang tersedia saat ini.
                       </div>
                     ) : (
-                      initialProducts.map((product: any) => (
+                      initialProducts.map((product: Product) => (
                         <div
                           key={product.id}
                           className="overflow-hidden rounded-xl border border-slate-200 transition-shadow hover:shadow-lg"

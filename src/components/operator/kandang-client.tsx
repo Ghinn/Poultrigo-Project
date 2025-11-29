@@ -5,9 +5,16 @@ import { addKandang, updateKandang } from '@/actions/kandang'
 import { Home, Plus, Edit, X, Users, Calendar } from 'lucide-react'
 import { useToast } from "@/components/ui/toast-provider"
 
-export default function KandangClient({ kandang }: { kandang: any[] }) {
+interface Kandang {
+    id: string;
+    name: string;
+    population?: number;
+    age?: number;
+}
+
+export default function KandangClient({ kandang }: { kandang: Kandang[] }) {
     const [isAddOpen, setIsAddOpen] = useState(false)
-    const [editingKandang, setEditingKandang] = useState<any>(null)
+    const [editingKandang, setEditingKandang] = useState<Kandang | null>(null)
     const [isLoading, setIsLoading] = useState(false)
 
     const { showToast } = useToast()

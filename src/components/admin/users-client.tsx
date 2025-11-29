@@ -2,12 +2,19 @@
 
 import { useState } from 'react'
 import { createUser, updateUser, deleteUser } from '@/actions/users'
-import { Plus, Edit, Trash, X, Save, Search } from 'lucide-react'
+import { Plus, Edit, Trash, X, Search } from 'lucide-react'
 import { useToast } from "@/components/ui/toast-provider"
 
-export default function UsersClient({ users }: { users: any[] }) {
+interface User {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+}
+
+export default function UsersClient({ users }: { users: User[] }) {
     const [isAddOpen, setIsAddOpen] = useState(false)
-    const [editingUser, setEditingUser] = useState<any>(null)
+    const [editingUser, setEditingUser] = useState<User | null>(null)
     const [searchTerm, setSearchTerm] = useState('')
     const [isLoading, setIsLoading] = useState(false)
 

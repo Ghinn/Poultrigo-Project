@@ -15,10 +15,9 @@ import {
   Newspaper,
   Calendar,
   Eye,
-  Tag,
 } from "lucide-react";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
-import { getPublishedNews } from "@/utils/news";
+import { getPublishedNews, type NewsArticle } from "@/utils/news";
 
 const featureCards = [
   {
@@ -182,10 +181,14 @@ export function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  const [latestNews, setLatestNews] = useState<any[]>([]);
+  const [latestNews, setLatestNews] = useState<NewsArticle[]>([]);
 
   useEffect(() => {
-    setLatestNews(getPublishedNews().slice(0, 3));
+    const loadNews = () => {
+      const news = getPublishedNews().slice(0, 3);
+      setLatestNews(news);
+    };
+    loadNews();
   }, []);
 
   useEffect(() => {
@@ -662,7 +665,7 @@ export function LandingPage() {
                 className="flex items-center justify-center opacity-90 transition-all hover:scale-110 hover:opacity-100"
                 style={{ animationDelay: `${index * 200}ms` }}
               >
-                <img
+                <Image
                   src={partner.logo}
                   alt={partner.name}
                   width={150}
@@ -692,7 +695,7 @@ export function LandingPage() {
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {latestNews.map((article, idx) => (
+                {latestNews.map((article) => (
                   <article
                     key={article.id}
                     onClick={() => router.push(`/news/${article.id}`)}

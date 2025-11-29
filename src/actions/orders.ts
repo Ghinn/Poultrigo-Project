@@ -2,8 +2,14 @@
 
 import dbConnect from '@/lib/mongodb'
 import Order from '@/models/Order'
-import User from '@/models/User'
 import { revalidatePath } from 'next/cache'
+
+interface OrderDocument {
+    _id: { toString(): string };
+    user_id?: { name?: string; email?: string } | string;
+    items: Array<{ product_name: string; quantity: number; price: number; subtotal: number }>;
+    created_at: Date;
+}
 
 export async function getOrders() {
     try {
@@ -13,7 +19,7 @@ export async function getOrders() {
             .sort({ created_at: -1 })
             .lean()
 
-        return orders.map((order: any) => ({
+        return orders.map((order: OrderDocument) => ({
             ...order,
             id: order._id.toString(),
             user_name: order.user_id?.name || 'Unknown',

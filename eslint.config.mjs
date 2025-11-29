@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Ignore JavaScript files that use require()
+    "seed-mongo.js",
+    "setup-db.js",
   ]),
 ]);
 

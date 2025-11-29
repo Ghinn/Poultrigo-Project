@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
                 if (role === 'admin') return NextResponse.redirect(new URL('/admin', request.url))
                 if (role === 'operator') return NextResponse.redirect(new URL('/operator', request.url))
                 if (role === 'guest') return NextResponse.redirect(new URL('/guest', request.url))
-            } catch (e) {
+            } catch {
                 // Invalid token, let them stay on login
             }
         }
@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest) {
         }
 
         return NextResponse.next()
-    } catch (err) {
+    } catch {
         // Invalid token
         const response = NextResponse.redirect(new URL('/login', request.url))
         response.cookies.delete('session')

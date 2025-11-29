@@ -2,16 +2,25 @@
 
 import { useState } from 'react'
 import { addToCart } from '@/actions/shop'
-import { ShoppingCart, Plus } from 'lucide-react'
+import { ShoppingCart } from 'lucide-react'
 import ImageWithFallback from '@/components/shared/image-with-fallback'
 import { useToast } from "@/components/ui/toast-provider"
 
-export default function ProductsClient({ products }: { products: any[] }) {
-    const [isLoading, setIsLoading] = useState<number | null>(null)
+interface Product {
+    id: string;
+    name: string;
+    price: number;
+    stock: number;
+    image_url?: string;
+    description?: string;
+}
+
+export default function ProductsClient({ products }: { products: Product[] }) {
+    const [isLoading, setIsLoading] = useState<string | null>(null)
 
     const { showToast } = useToast()
 
-    async function handleAddToCart(productId: number) {
+    async function handleAddToCart(productId: string) {
         setIsLoading(productId)
         const formData = new FormData()
         formData.append('product_id', productId.toString())

@@ -4,12 +4,40 @@ import dbConnect from '@/lib/mongodb'
 import Product from '@/models/Product'
 import CartItem from '@/models/CartItem'
 import Order from '@/models/Order'
-import mongoose from 'mongoose'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
 
 const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET || 'dev-secret-key')
+
+interface ProductDocument {
+    _id: { toString(): string };
+    name: string;
+    price: number;
+    stock: number;
+    image_url?: string;
+    status?: string;
+}
+
+interface CartItemDocument {
+    _id: { toString(): string };
+    quantity: number;
+    product_id: ProductDocument | { _id: { toString(): string }; name: string; price: number; stock: number; image_url?: string };
+    created_at?: Date;
+}
+
+interface OrderItem {
+    product_name: string;
+    quantity: number;
+}
+
+interface OrderDocument {
+    order_number: string;
+    created_at: Date;
+    total_amount: number;
+    status: string;
+    items: OrderItem[];
+}
 
 async function getUserId() {
     const cookieStore = await cookies()
@@ -18,7 +46,7 @@ async function getUserId() {
     try {
         const { payload } = await jwtVerify(session, SECRET)
         return payload.id as string // ID is string in Mongo/User model
-    } catch (e) {
+    } catch {
         return null
     }
 }
@@ -27,18 +55,18 @@ export async function getProducts() {
     try {
         await dbConnect()
         const products = await Product.find({ status: { $ne: 'out_of_stock' } }).sort({ id: 1 }).lean()
-        return products.map((p: any) => ({
+        return products.map((p: ProductDocument) => ({
             ...p,
             _id: p._id.toString(),
             id: p._id.toString()
-        })) as any[]
+        }))
     } catch (err) {
         console.error(err)
         return []
     }
 }
 
-export async function addToCart(prevState: any, formData: FormData) {
+export async function addToCart(prevState: { error?: string; success?: string } | null, formData: FormData) {
     const userId = await getUserId()
     if (!userId) return { error: 'Please login first.' }
 
@@ -86,8 +114,8 @@ export async function getCart() {
             .sort({ created_at: -1 })
             .lean()
 
-        const items = cartItems.map((item: any) => {
-            const product = item.product_id
+        const items = cartItems.map((item: CartItemDocument) => {
+            const product = item.product_id as ProductDocument
             return {
                 id: item._id.toString(),
                 quantity: item.quantity,
@@ -99,7 +127,7 @@ export async function getCart() {
             }
         })
 
-        const total = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
+        const total = items.reduce((sum: number, item) => sum + (item.price * item.quantity), 0)
         return { items, total }
     } catch (err) {
         console.error(err)
@@ -107,7 +135,7 @@ export async function getCart() {
     }
 }
 
-export async function updateCart(prevState: any, formData: FormData) {
+export async function updateCart(prevState: { error?: string; success?: string } | null, formData: FormData) {
     const userId = await getUserId()
     if (!userId) return { error: 'Please login first.' }
 
@@ -149,7 +177,7 @@ export async function removeFromCart(id: string) {
     }
 }
 
-export async function checkout(prevState: any, formData: FormData) {
+export async function checkout(prevState: { error?: string; success?: string; redirect?: string } | null, formData: FormData) {
     const userId = await getUserId()
     if (!userId) return { error: 'Please login first.' }
 
@@ -171,7 +199,7 @@ export async function checkout(prevState: any, formData: FormData) {
         let total = 0
         const orderItems = []
 
-        for (let item of cartItems) {
+        for (const item of cartItems) {
             const product = item.product_id
             if (item.quantity > product.stock) {
                 return { error: `Not enough stock for ${product.name}` }
@@ -223,13 +251,13 @@ export async function getOrders() {
         await dbConnect()
         const orders = await Order.find({ user_id: userId }).sort({ created_at: -1 }).lean()
 
-        return orders.map((order: any) => ({
+        return orders.map((order: OrderDocument) => ({
             id: order.order_number,
             date: new Date(order.created_at).toLocaleDateString('id-ID', {
                 day: 'numeric', month: 'long', year: 'numeric'
             }),
-            product: order.items.map((i: any) => i.product_name).join(', '),
-            quantity: order.items.reduce((sum: number, i: any) => sum + i.quantity, 0),
+            product: order.items.map((i: OrderItem) => i.product_name).join(', '),
+            quantity: order.items.reduce((sum: number, i: OrderItem) => sum + i.quantity, 0),
             total: `Rp ${parseFloat(order.total_amount).toLocaleString('id-ID')}`,
             status: order.status === 'pending' ? 'Sedang Diproses' :
                 order.status === 'completed' ? 'Selesai' :
