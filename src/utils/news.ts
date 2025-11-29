@@ -391,6 +391,227 @@ Platform seperti Poultrigo memungkinkan peternak untuk memulai transformasi digi
       views: 0,
       tags: ["Teknologi", "Tren", "Innovation", "2024"],
     },
+    {
+      title: "Pengolahan Ayam Hasil Ternak: Praktik Keamanan Pangan dan Nilai Tambah",
+      content: `
+# Pengolahan Ayam Hasil Ternak: Praktik Keamanan Pangan dan Nilai Tambah
+
+Pengolahan hasil ternak ayam bukan sekadar memotong dan menjual daging. Proses pengolahan yang baik meningkatkan nilai produk, memperpanjang umur simpan, dan menjamin keamanan pangan bagi konsumen.
+
+## Tahapan Umum Pengolahan
+
+- **Penerimaan & Seleksi**: Ayam yang diterima disortir berdasarkan umur, kondisi, dan tujuan pemrosesan (mis. pedaging vs. petelur). Ayam sakit dipisahkan.
+- **Pembiusan dan Pemotongan**: Dilakukan dengan standar humanely dan sesuai regulasi keamanan pangan.
+- **Plucking & Evisceration**: Pencabutan bulu dan pengeluaran organ dilakukan di area bersih untuk menghindari kontaminasi silang.
+- **Pencucian dan Pendinginan**: Menurunkan suhu inti daging dengan cepat untuk memperlambat pertumbuhan mikroba.
+- **Pemotongan & Pengemasan**: Daging dipotong sesuai permintaan pasar dan dikemas dalam kondisi higienis; vacuum atau MAP dapat meningkatkan shelf life.
+
+## Standar Keamanan Pangan
+
+Beberapa praktik untuk menjaga keamanan pangan:
+
+- Kebersihan area dan sanitasi berkala
+- Pengendalian suhu sepanjang rantai pasok
+- Batch tracking untuk traceability
+- Pengujian mikrobiologis (mis. Salmonella, Campylobacter)
+
+## Nilai Tambah Produk
+
+Dengan pengolahan yang tepat, produk dapat dikembangkan menjadi:
+
+- Potongan premium (bone-in, boneless)
+- Olahan siap masak (marinated, pre-cooked)
+- Produk value-added (sosis, nugget, produk siap saji)
+
+Peningkatan nilai ini membuka akses ke segmen pasar yang lebih baik dan margin keuntungan yang lebih tinggi.
+      `,
+      excerpt: "Praktik pengolahan ayam yang aman dan bagaimana menambah nilai produk hasil ternak.",
+      author: "Tim Poultrigo",
+      authorId: "admin-001",
+      category: "Berita",
+      featuredImage: "https://images.unsplash.com/photo-1604908177522-4b2f2f5d3b4d?auto=format&fit=crop&w=1200&q=80",
+      published: true,
+      views: 0,
+      tags: ["Pengolahan", "Keamanan Pangan", "Nilai Tambah"],
+    },
+    {
+      title: "Perbedaan: Ayam Breeding, Broiler, Petelur, dan Pedaging — Panduan Lengkap",
+      content: `
+# Perbedaan: Ayam Breeding, Broiler, Petelur, dan Pedaging — Panduan Lengkap
+
+Dalam industri perunggasan ada beberapa tipe ayam yang dibudidayakan dengan tujuan berbeda. Memahami perbedaan penting untuk manajemen, pemilihan pakan, dan strategi bisnis.
+
+## 1. Ayam Breeding (Pembibitan)
+
+Ayam breeding adalah garis induk yang dipelihara untuk menghasilkan telur tetas atau anak (day-old chicks) yang berkualitas. Fokus utamanya adalah **genetika**, fertilitas, dan umur reproduksi.
+
+Karakteristik:
+- Dikelola pada siklus reproduksi
+- Memerlukan manajemen nutrisi dan kesehatan khusus
+- Infrastruktur pemeliharaan berbeda dari broiler atau petelur komersial
+
+## 2. Broiler (Ayam Pedaging)
+
+Broiler dibesarkan khusus untuk produksi daging dalam waktu singkat (biasanya 4–7 minggu tergantung strain). Tujuan utama adalah efisiensi konversi pakan menjadi daging.
+
+Karakteristik:
+- Pertumbuhan cepat
+- Pakan tinggi energi dan protein
+- Sirkulasi kandang dan manajemen lingkungan sangat penting
+
+## 3. Petelur (Layer)
+
+Ayam petelur dipelihara untuk produksi telur konsumen. Mereka memiliki siklus produksi telur yang panjang dan memerlukan nutrisi yang mendukung persistensi bertelur.
+
+Karakteristik:
+- Fokus pada kualitas telur dan persistensi bertelur
+- Pakan diformulasikan untuk produksi telur (kalsium, fosfor)
+- Manajemen reproduksi dan pencahayaan (lighting program) penting
+
+## 4. Ayam Pedaging vs Broiler: Perbedaan Istilah
+
+Istilah "pedaging" seringkali merujuk pada ayam yang dibesarkan untuk daging—dalam praktik komersial Indonesia ini biasanya broiler. Namun pada beberapa konteks, pedaging dapat mencakup strain yang lebih lambat tumbuh untuk pasar tertentu.
+
+## Dampak pada Bisnis
+
+Memilih jenis yang tepat menentukan model bisnis: siklus produksi, jenis kandang, pakan, pasar tujuan, dan modal kerja.
+
+## Rekomendasi Singkat
+
+- Untuk pasar daging massal: pilih strain broiler berkinerja tinggi
+- Untuk peternak kecil yang fokus telur: pilih strain layer yang tahan penyakit dan produktif
+- Untuk pembibitan: siapkan sumber daya untuk rekayasa genetik, manajemen reproduksi, dan biosekuriti
+      `,
+      excerpt: "Ringkasan perbedaan tipe ayam penting: breeding, broiler, petelur, dan pedaging beserta implikasi manajerial.",
+      author: "Dr. Peternakan",
+      authorId: "admin-002",
+      category: "Tips",
+      featuredImage: "https://images.unsplash.com/photo-1562967916-eb82221dfb36?auto=format&fit=crop&w=1200&q=80",
+      published: true,
+      views: 0,
+      tags: ["Jenis Ayam", "Breeding", "Broiler", "Petelur"],
+    },
+    {
+      title: "Pakan Ayam yang Baik: Ciri, Komposisi, dan Rekomendasi",
+      content: `
+# Pakan Ayam yang Baik: Ciri, Komposisi, dan Rekomendasi
+
+Pakan yang tepat merupakan fondasi keberhasilan peternakan ayam. Berikut ciri pakan berkualitas dan bagaimana memilihnya.
+
+## Ciri Pakan Berkualitas
+
+- **Sumber bahan baku yang konsisten**: jagung, bungkil kedelai, sumber protein lain
+- **Kadar nutrisi sesuai fase**: starter, grower, finisher, layer
+- **Kebersihan & bebas dari aflatoksin**
+- **Tekstur dan palatabilitas baik**
+
+## Komposisi Umum (contoh untuk broiler starter)
+
+- Energi: 3000–3200 kcal/kg
+- Protein: 20–24%
+- Kalsium & Fosfor: disesuaikan untuk tahap pertumbuhan
+- Additive: enzim, probiotik, vitamin & mineral premix
+
+## Rekomendasi Praktis
+
+1. Beli dari pabrik pakan terpercaya dan minta surat analisis (SNI / spesifikasi)
+2. Sesuaikan pakan menurut umur/tujuan produksi
+3. Simpan pakan di tempat kering, ventilasi baik, dan rotasi stok (FIFO)
+4. Pertimbangkan suplemen lokal bila perlu (mis. probiotik) untuk meningkatkan kesehatan usus
+
+Dengan pakan yang tepat, performa tumbuh dan efisiensi pakan (FCR) akan meningkat.
+      `,
+      excerpt: "Panduan memilih pakan ayam berkualitas: komposisi, ciri, dan tips penyimpanan.",
+      author: "Ahli Nutrisi",
+      authorId: "admin-003",
+      category: "Tips",
+      featuredImage: "https://images.unsplash.com/photo-1603312161729-8f2f7ec9b2dd?auto=format&fit=crop&w=1200&q=80",
+      published: true,
+      views: 0,
+      tags: ["Pakan", "FCR", "Nutrisi"],
+    },
+    {
+      title: "Tips Memilih Bibit Ayam untuk Memulai Peternakan",
+      content: `
+# Tips Memilih Bibit Ayam untuk Memulai Peternakan
+
+Memilih bibit (day-old chicks) yang tepat menentukan keberhasilan siklus produksi pertama. Berikut langkah praktis untuk memilih bibit berkualitas.
+
+## 1. Sumber Bibit
+
+- Pilih dari pembibitan/penyuplai resmi dengan reputasi baik (sertifikasi, rekam jejak)
+- Pastikan ada jaminan kesehatan dan vaksinasi awal
+
+## 2. Kondisi Fisik DOC
+
+- Aktif bergerak dan responsif
+- Bulu kering dan bersih
+- Mata cerah, tidak ada tanda dehidrasi
+
+## 3. Umur & Berat Rata-rata
+
+- DOC sebaiknya homogen (rentang berat kecil)
+- Berat awal yang sesuai dengan strain (lihat spesifikasi breeder)
+
+## 4. Riwayat Vaksinasi & Biosekuriti
+
+- Mintalah bukti vaksinasi dasar (mis. Gumboro, Marek jika relevan)
+- Tanyakan tentang praktik biosekuriti di hatchery
+
+## 5. Persiapan Kandang & Brooding
+
+- Siapkan brooder dengan suhu, pakan, dan minum yang sesuai
+- Adaptasi awal penting untuk menekan mortalitas
+
+Dengan memilih bibit yang tepat dan persiapan brooding yang baik, Anda memberi fondasi kuat untuk produktivitas ke depan.
+      `,
+      excerpt: "Praktis: bagaimana memilih day-old chicks (DOC) yang sehat untuk memulai peternakan.",
+      author: "Konsultan Peternakan",
+      authorId: "admin-004",
+      category: "Tutorial",
+      featuredImage: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?auto=format&fit=crop&w=1200&q=80",
+      published: true,
+      views: 0,
+      tags: ["Bibit", "DOC", "Brooding"],
+    },
+    {
+      title: "PT Japfa & Manajemen Peternakan Besar di Indonesia: Belajar dari Mitra Industri",
+      content: `
+# PT Japfa & Manajemen Peternakan Besar di Indonesia: Belajar dari Mitra Industri
+
+PT Japfa (Japfa Comfeed) adalah salah satu pemain besar di industri perunggasan Indonesia, terlibat di berbagai rantai nilai: pembibitan, pakan, pembesaran, dan pemasaran. Bekerja sama dengan perusahaan besar seperti Japfa membuka peluang transfer knowledge dan praktik bisnis yang matang.
+
+## Model Bisnis Terpadu (Integrated Farming)
+
+- **Vertically integrated**: Kontrol mulai dari hatchery, pakan, hingga pemasaran yang memastikan konsistensi kualitas dan margin lebih stabil.
+- **Skala Ekonomi**: Produksi besar menurunkan biaya per unit.
+- **R&D & Genetika**: Investasi pada breeding dan nutrisi untuk performa ayam yang lebih baik.
+
+## Praktik Manajemen yang Umum Digunakan
+
+1. **Supply Chain Control**: Kontrak dengan peternak mitra, pembelian pakan terstandar.
+2. **Standard Operating Procedures (SOP)**: Untuk biosekuriti, vaksinasi, dan euthanasia humanis.
+3. **Monitoring & KPI**: FCR, mortalitas, berat panen, dan efisiensi pakan dipantau secara ketat.
+4. **Diversifikasi Produk**: Dari komoditas mentah hingga produk olahan.
+
+## Implikasi untuk Peternak Lokal
+
+- Kemitraan dengan perusahaan besar memberi akses ke pasar, pembiayaan, dan teknologi.
+- Namun, peternak harus menjaga independensi operasional dan negosiasi kontrak yang adil.
+
+## Kesimpulan
+
+Bekerja sama dengan mitra industri seperti PT Japfa dapat mempercepat adopsi praktik terbaik dan teknologi. Peternak yang cerdas akan memanfaatkan kesempatan ini untuk meningkatkan produktivitas sambil menjaga keberlanjutan usaha mereka.
+      `,
+      excerpt: "Ringkasan model bisnis dan manajemen peternakan besar di Indonesia dari pengalaman mitra industri seperti PT Japfa.",
+      author: "Analyst Poultrigo",
+      authorId: "admin-005",
+      category: "Berita",
+      featuredImage: "https://images.unsplash.com/photo-1580734073186-3b1a0c3fe2f2?auto=format&fit=crop&w=1200&q=80",
+      published: true,
+      views: 0,
+      tags: ["Japfa", "Kemitraan", "Manajemen", "Peternakan Besar"],
+    },
   ];
 
   const articlesWithDates = demoArticles.map((article) => {
@@ -508,4 +729,5 @@ export function incrementNewsViews(id: string): void {
 export function getNewsByCategory(category: NewsArticle["category"]): NewsArticle[] {
   return getPublishedNews().filter((article) => article.category === category);
 }
+
 
