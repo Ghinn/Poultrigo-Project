@@ -160,7 +160,8 @@ export function NewsManagement() {
       await updateNews(null, data);
     }
 
-    await loadNews();
+    const news = await getNews();
+    setAllNews(news);
     setIsLoading(false);
     handleCloseModal();
     showToast("Artikel berhasil disimpan!", "success");
@@ -169,7 +170,8 @@ export function NewsManagement() {
   const handleDelete = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus artikel ini?")) {
       await deleteNews(id);
-      loadNews();
+      const news = await getNews();
+    setAllNews(news);
       showToast("Artikel berhasil dihapus!", "success");
     }
   };

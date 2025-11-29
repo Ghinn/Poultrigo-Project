@@ -41,17 +41,26 @@ import { useToast } from "@/components/ui/toast-provider";
 
 type ModalMode = "create" | "edit" | "view" | null;
 
+interface UserManagement {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  created_at?: Date | string;
+  last_login?: Date | string;
+}
+
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<
     "overview" | "users" | "orders" | "news" | "sensors" | "system" | "logs"
   >("overview");
 
   // User management state
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserManagement[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "operator" | "guest">("all");
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserManagement | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -117,17 +126,18 @@ export function AdminDashboard() {
     order.customer.name.toLowerCase().includes(orderSearchQuery.toLowerCase())
   );
 
-  const handleUpdateOrderStatus = (orderId: number, status: string) => {
+  const handleUpdateOrderStatus = (orderId: string, status: string) => {
     setConfirmModal({
       isOpen: true,
       title: "Konfirmasi Update Status",
       message: `Apakah Anda yakin ingin mengubah status pesanan menjadi ${status}?`,
       onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, isLoading: true }));
-        const res = await updateOrderStatus(orderId.toString(), status);
+        const res = await updateOrderStatus(orderId, status);
         if (res?.success) {
           showToast("Status pesanan berhasil diperbarui", "success");
-          loadOrders();
+          const allOrders = await getAllOrders();
+          setOrders(allOrders);
         } else {
           showToast("Gagal memperbarui status pesanan", "error");
         }
@@ -142,7 +152,7 @@ export function AdminDashboard() {
     {
       label: "Total Pengguna",
       value: users.length.toString(),
-      change: `+${users.filter((u) => new Date(u.createdAt).getTime() > oneDayAgo).length}`,
+      change: `+${users.filter((u) => u.created_at && new Date(u.created_at).getTime() > oneDayAgo).length}`,
       icon: Users,
       color: "text-orange-500",
       bgColor: "bg-orange-500",
@@ -186,19 +196,19 @@ export function AdminDashboard() {
     setError("");
   };
 
-  const handleOpenEdit = (user: User) => {
+  const handleOpenEdit = (user: UserManagement) => {
     setFormData({
       name: user.name,
       email: user.email,
       password: "",
-      role: user.role,
+      role: user.role as "guest" | "operator" | "admin",
     });
     setSelectedUser(user);
     setModalMode("edit");
     setError("");
   };
 
-  const handleOpenView = (user: User) => {
+  const handleOpenView = (user: UserManagement) => {
     setSelectedUser(user);
     setModalMode("view");
   };
@@ -254,7 +264,8 @@ export function AdminDashboard() {
       return;
     }
 
-    loadUsers();
+    const allUsers = await getUsers();
+    setUsers(allUsers);
     handleCloseModal();
     showToast(modalMode === "create" ? "Pengguna berhasil dibuat" : "Pengguna berhasil diperbarui", "success");
   };
@@ -269,7 +280,8 @@ export function AdminDashboard() {
         const res = await deleteUser(userId);
         if (res?.success) {
           showToast("Pengguna berhasil dihapus", "success");
-          loadUsers();
+          const allUsers = await getUsers();
+          setUsers(allUsers);
           if (selectedUser?.id === userId) {
             handleCloseModal();
           }
@@ -694,7 +706,7 @@ export function AdminDashboard() {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-600">
-                              {formatDate(user.last_login || "")}
+                              {user.last_login ? formatDate(typeof user.last_login === 'string' ? user.last_login : user.last_login.toISOString()) : "N/A"}
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2">
@@ -792,7 +804,7 @@ export function AdminDashboard() {
                               {order.products}
                             </td>
                             <td className="px-6 py-4 text-sm font-medium text-[#001B34]">
-                              Rp {parseFloat(order.total).toLocaleString('id-ID')}
+                              Rp {order.total.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-600">
                               {order.date}
@@ -1137,7 +1149,7 @@ export function AdminDashboard() {
                         Terakhir Login
                       </label>
                       <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-900">
-                        {formatDate(selectedUser?.last_login || "")}
+                        {selectedUser?.last_login ? formatDate(typeof selectedUser.last_login === 'string' ? selectedUser.last_login : selectedUser.last_login.toISOString()) : "Belum pernah login"}
                       </div>
                     </div>
                     <div>
@@ -1145,7 +1157,7 @@ export function AdminDashboard() {
                         Tanggal Dibuat
                       </label>
                       <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-900">
-                        {new Date(selectedUser?.createdAt || "").toLocaleDateString("id-ID")}
+                        {selectedUser?.created_at ? new Date(selectedUser.created_at).toLocaleDateString("id-ID") : "N/A"}
                       </div>
                     </div>
                   </>

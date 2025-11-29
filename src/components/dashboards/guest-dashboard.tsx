@@ -68,7 +68,7 @@ interface CartItem {
   name: string;
   price: number;
   stock: number;
-  image_url: string;
+  image_url?: string;
 }
 
 interface Cart {
@@ -623,9 +623,9 @@ export function GuestDashboard({
                             <h4 className="mb-2 text-[#001B34]">{product.name}</h4>
                             <p className="mb-3 text-xs text-slate-500 line-clamp-2">{product.description}</p>
                             <div className="mb-4 flex items-center justify-between text-sm text-slate-600">
-                              <span>Stok: {product.stock}</span>
+                              <span>Stok: {product.stock.toString()}</span>
                               <span className="font-semibold text-orange-600">
-                                Rp {parseFloat(product.price).toLocaleString()}
+                                Rp {product.price.toLocaleString('id-ID')}
                               </span>
                             </div>
                             <button

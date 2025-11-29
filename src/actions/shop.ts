@@ -258,7 +258,7 @@ export async function getOrders() {
             }),
             product: order.items.map((i: OrderItem) => i.product_name).join(', '),
             quantity: order.items.reduce((sum: number, i: OrderItem) => sum + i.quantity, 0),
-            total: `Rp ${parseFloat(order.total_amount).toLocaleString('id-ID')}`,
+            total: `Rp ${order.total_amount.toLocaleString('id-ID')}`,
             status: order.status === 'pending' ? 'Sedang Diproses' :
                 order.status === 'completed' ? 'Selesai' :
                     order.status === 'cancelled' ? 'Dibatalkan' : order.status

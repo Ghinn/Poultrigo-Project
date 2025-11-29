@@ -10,6 +10,7 @@ interface User {
     name: string;
     email: string;
     role: string;
+    last_login?: Date | string;
 }
 
 export default function UsersClient({ users }: { users: User[] }) {
@@ -108,13 +109,12 @@ export default function UsersClient({ users }: { users: User[] }) {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                        }`}>
-                                        {user.status}
+                                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-800">
+                                        Active
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-slate-500">
-                                    {user.last_login ? new Date(user.last_login).toLocaleDateString() : '-'}
+                                    {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'N/A'}
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex gap-2">
@@ -210,13 +210,6 @@ export default function UsersClient({ users }: { users: User[] }) {
                                     <option value="guest">Guest</option>
                                     <option value="operator">Operator</option>
                                     <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-sm font-medium text-slate-700">Status</label>
-                                <select name="status" defaultValue={editingUser.status} className="w-full rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-orange-500">
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
                                 </select>
                             </div>
                             <div className="flex justify-end gap-3 pt-4">

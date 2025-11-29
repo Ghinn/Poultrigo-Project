@@ -6,9 +6,15 @@ import { revalidatePath } from 'next/cache'
 
 interface OrderDocument {
     _id: { toString(): string };
+    order_number: string;
     user_id?: { name?: string; email?: string } | string;
     items: Array<{ product_name: string; quantity: number; price: number; subtotal: number }>;
     created_at: Date;
+    total_amount: number;
+    status: string;
+    buyer_name: string;
+    address: string;
+    whatsapp: string;
 }
 
 export async function getOrders() {
@@ -20,11 +26,16 @@ export async function getOrders() {
             .lean()
 
         return orders.map((order: OrderDocument) => ({
-            ...order,
             id: order._id.toString(),
-            user_name: order.user_id?.name || 'Unknown',
-            user_email: order.user_id?.email || 'Unknown',
-            items: order.items // Items are already embedded
+            order_number: order.order_number,
+            created_at: order.created_at.toISOString(),
+            total_amount: order.total_amount,
+            status: order.status,
+            items: order.items,
+            buyer_name: order.buyer_name,
+            user_email: (typeof order.user_id === 'object' && order.user_id?.email) || 'Unknown',
+            address: order.address,
+            whatsapp: order.whatsapp
         }))
     } catch (err) {
         console.error(err)

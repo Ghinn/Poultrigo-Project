@@ -164,15 +164,15 @@ const roleCards = [
 const partnerLogos = [
   {
     name: "PT. Japfa",
-    logo: "Logo/Japfa_logo.svg",
+    logo: "/logo/Japfa_logo.svg",
   },
   {
     name: "Tekom",
-    logo: "Logo/Logo TEKOM.png",
+    logo: "/logo/Logo TEKOM.png",
   },
   {
     name: "Sekolah Vokasi",
-    logo: "Logo/Logo Sekolah Vokasi.png",
+    logo: "/logo/Logo Sekolah Vokasi.png",
   },
 ];
 
@@ -665,7 +665,7 @@ export function LandingPage() {
                 className="flex items-center justify-center opacity-90 transition-all hover:scale-110 hover:opacity-100"
                 style={{ animationDelay: `${index * 200}ms` }}
               >
-                <Image
+                <ImageWithFallback
                   src={partner.logo}
                   alt={partner.name}
                   width={150}
