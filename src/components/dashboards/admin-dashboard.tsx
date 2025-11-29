@@ -100,13 +100,32 @@ export function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderSearchQuery, setOrderSearchQuery] = useState("");
 
+  // Load data functions
+  const loadUsers = async () => {
+    const allUsers = await getUsers();
+    // Map users to include password (required by User type) - we'll use empty string since we don't expose passwords
+    const mappedUsers: User[] = allUsers.map((u: any) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      password: '', // Password is not exposed from getUsers for security
+      role: u.role as "guest" | "operator" | "admin",
+      createdAt: u.createdAt || u.created_at?.toISOString() || new Date().toISOString(),
+      last_login: u.last_login
+    }));
+    setUsers(mappedUsers);
+  };
+
+  const loadOrders = async () => {
+    const allOrders = await getAllOrders();
+    setOrders(allOrders);
+  };
+
   // Load data
   useEffect(() => {
     const loadData = async () => {
-      const allUsers = await getUsers();
-      setUsers(allUsers);
-      const allOrders = await getAllOrders();
-      setOrders(allOrders);
+      await loadUsers();
+      await loadOrders();
     };
     void loadData();
   }, []);
@@ -804,7 +823,7 @@ export function AdminDashboard() {
                               {order.products}
                             </td>
                             <td className="px-6 py-4 text-sm font-medium text-[#001B34]">
-                              Rp {order.total.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                Rp {order.total.toLocaleString('id-ID')}
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-600">
                               {order.date}
