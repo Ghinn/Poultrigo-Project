@@ -14,11 +14,7 @@ import {
   User,
 } from "lucide-react";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
-import {
-  getUserByEmail,
-  setCurrentUser,
-  initializeDemoUsers,
-} from "@/utils/auth";
+import { login } from "@/actions/auth";
 
 type RoleOption = "guest" | "operator" | "admin";
 
@@ -28,69 +24,32 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<RoleOption>("guest");
   const [error, setError] = useState("");
   const registered = searchParams?.get("registered") === "true";
   const successMessage = registered
     ? "Registrasi berhasil! Silakan masuk dengan akun Anda."
     : "";
 
-  // Initialize demo users on mount
   useEffect(() => {
-    initializeDemoUsers();
+    // Clear client-side session when on login page
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("poultrigo_current_user");
+    }
   }, []);
 
-  // Auto-detect role when email changes
-  useEffect(() => {
-    if (email.trim()) {
-      const user = getUserByEmail(email);
-      if (user) {
-        setSelectedRole(user.role);
-      }
-    }
-  }, [email]);
-
-  const handleLogin = (e: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
-    // Cari user berdasarkan email
-    const user = getUserByEmail(email);
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("password", password);
 
-    if (!user) {
-      setError("Email atau kata sandi salah.");
-      return;
+    const result = await login(null, formData);
+
+    if (result?.error) {
+      setError(result.error);
     }
-
-    // Verifikasi password
-    if (user.password !== password) {
-      setError("Email atau kata sandi salah.");
-      return;
-    }
-
-    // Verifikasi role - gunakan role dari database (bisa diubah oleh admin)
-    // Dropdown hanya untuk informasi, role sebenarnya diambil dari database
-    if (user.role !== selectedRole) {
-      // Jika role tidak cocok, update dropdown dengan role sebenarnya dari database
-      setSelectedRole(user.role);
-      setError(
-        `Anda memiliki akses sebagai ${user.role === "admin" ? "Admin Developer" : user.role === "operator" ? "Operator Kandang" : "Guest/Pembeli"}. Silakan coba login lagi.`
-      );
-      return;
-    }
-
-    // Simpan user yang login (dengan role dari database)
-    setCurrentUser(user);
-
-    // Redirect ke dashboard sesuai role dari database
-    const nextPath =
-      user.role === "admin"
-        ? "/admin"
-        : user.role === "operator"
-          ? "/operator"
-          : "/guest";
-
-    router.push(nextPath);
   };
 
   return (
@@ -183,88 +142,7 @@ export function LoginPage() {
               </div>
             )}
 
-            <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-              <p className="mb-2 text-sm font-semibold text-blue-900">
-                Akun Demo (Untuk Testing):
-              </p>
-              <div className="space-y-2 text-xs text-blue-800">
-                <div>
-                  <strong>Admin:</strong> admin@poultrigo.com / admin123
-                </div>
-                <div>
-                  <strong>Operator:</strong> operator@poultrigo.com / operator123
-                </div>
-                <div>
-                  <strong>Guest:</strong> guest@poultrigo.com / guest123
-                </div>
-              </div>
-              <p className="mt-2 text-xs text-blue-700">
-                ⚠️ Pilih role yang sesuai di dropdown sebelum login!
-              </p>
-            </div>
-
             <form className="relative z-30 space-y-6" onSubmit={handleLogin}>
-              <div>
-                <label className="mb-2 block text-sm text-slate-600">
-                  Pilih peran
-                </label>
-                <div className="relative">
-                  <select
-                    value={selectedRole}
-                    onChange={(e) => setSelectedRole(e.target.value as RoleOption)}
-                    className="w-full appearance-none rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-base text-slate-900 focus:border-orange-500 focus:outline-none"
-                  >
-                    <option value="guest">Guest / Pembeli</option>
-                    <option value="operator">Operator Kandang</option>
-                    <option value="admin">Admin Developer</option>
-                  </select>
-                  <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                      selectedRole === "admin"
-                        ? "bg-gradient-to-br from-[#001B34] to-[#003561]"
-                        : selectedRole === "operator"
-                          ? "bg-gradient-to-br from-orange-500 to-orange-600"
-                          : "bg-gradient-to-br from-slate-500 to-slate-600"
-                    }`}
-                  >
-                    {selectedRole === "admin" ? (
-                      <Shield className="h-5 w-5 text-white" />
-                    ) : selectedRole === "operator" ? (
-                      <Gauge className="h-5 w-5 text-white" />
-                    ) : (
-                      <User className="h-5 w-5 text-white" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-sm text-slate-600">Masuk sebagai</div>
-                    <div className="text-[#001B34]">
-                      {selectedRole === "admin"
-                        ? "Admin Developer"
-                        : selectedRole === "operator"
-                          ? "Operator Kandang"
-                          : "Guest / Pembeli"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               <div>
                 <label className="mb-2 block text-sm text-slate-600">
                   Alamat email
@@ -328,13 +206,7 @@ export function LoginPage() {
 
               <button
                 type="submit"
-                className={`w-full rounded-lg py-3.5 text-white transition-all ${
-                  selectedRole === "admin"
-                    ? "bg-gradient-to-r from-[#001B34] to-[#003561] hover:shadow-xl"
-                    : selectedRole === "operator"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-xl hover:shadow-orange-500/30"
-                      : "bg-gradient-to-r from-slate-500 to-slate-600 hover:shadow-xl"
-                }`}
+                className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 py-3.5 text-white transition-all hover:shadow-xl hover:shadow-orange-500/30"
               >
                 Masuk ke Dashboard
               </button>

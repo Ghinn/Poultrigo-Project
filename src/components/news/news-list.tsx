@@ -4,19 +4,22 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Calendar, User, Eye, Tag, Search, Newspaper, TrendingUp, Home } from "lucide-react";
-import {
-  getPublishedNews,
-  type NewsArticle,
-} from "@/utils/news";
+import { type NewsArticle } from "@/utils/news";
 
 type CategoryFilter = "all" | NewsArticle["category"];
 
-export default function NewsList() {
+interface NewsListProps {
+  initialNews: NewsArticle[];
+  backUrl?: string;
+  backLabel?: string;
+}
+
+export default function NewsList({ initialNews, backUrl = "/", backLabel = "Kembali ke Beranda" }: NewsListProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
 
-  const allNews = getPublishedNews();
+  const allNews = initialNews;
   const categories: NewsArticle["category"][] = [
     "Teknologi",
     "Tips",
@@ -42,7 +45,14 @@ export default function NewsList() {
 
   // Get featured article (most recent)
   const featuredArticle = allNews.length > 0 ? allNews[0] : null;
-  const regularNews = filteredNews.filter((article) => article.id !== featuredArticle?.id);
+  const showFeatured = featuredArticle && categoryFilter === "all" && !searchQuery;
+
+  const regularNews = filteredNews.filter((article) => {
+    if (showFeatured && article.id === featuredArticle.id) {
+      return false;
+    }
+    return true;
+  });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -69,11 +79,11 @@ export default function NewsList() {
       {/* Back to Home Button */}
       <button
         type="button"
-        onClick={() => router.push("/")}
+        onClick={() => router.push(backUrl)}
         className="group flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-all hover:bg-white hover:text-[#001B34] hover:shadow-sm"
       >
         <Home className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-        <span>Kembali ke Beranda</span>
+        <span>{backLabel}</span>
       </button>
 
       {/* Header Section */}
@@ -116,11 +126,10 @@ export default function NewsList() {
           <button
             type="button"
             onClick={() => setCategoryFilter("all")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all sm:px-5 sm:py-2.5 ${
-              categoryFilter === "all"
-                ? "bg-orange-500 text-white shadow-md shadow-orange-500/30"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all sm:px-5 sm:py-2.5 ${categoryFilter === "all"
+              ? "bg-orange-500 text-white shadow-md shadow-orange-500/30"
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
           >
             Semua
           </button>
@@ -129,11 +138,10 @@ export default function NewsList() {
               key={category}
               type="button"
               onClick={() => setCategoryFilter(category)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all sm:px-5 sm:py-2.5 ${
-                categoryFilter === category
-                  ? "bg-orange-500 text-white shadow-md shadow-orange-500/30"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all sm:px-5 sm:py-2.5 ${categoryFilter === category
+                ? "bg-orange-500 text-white shadow-md shadow-orange-500/30"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
             >
               {category}
             </button>
@@ -152,7 +160,7 @@ export default function NewsList() {
       </div>
 
       {/* Featured Article */}
-      {featuredArticle && categoryFilter === "all" && !searchQuery && (
+      {showFeatured && (
         <article
           onClick={() => router.push(`/news/${featuredArticle.id}`)}
           className="group relative overflow-hidden rounded-2xl border-2 border-orange-200 bg-white shadow-lg transition-all hover:border-orange-300 hover:shadow-xl"

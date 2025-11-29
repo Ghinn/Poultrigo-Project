@@ -1,29 +1,33 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Calendar, User, Eye, Tag, Clock, Share2, BookOpen, Home } from "lucide-react";
-import {
-  getNewsById,
-  incrementNewsViews,
-  getPublishedNews,
-} from "@/utils/news";
+import { incrementNewsViews } from "@/actions/news";
 import { MarkdownRenderer } from "./markdown-renderer";
+import { useToast } from "@/components/ui/toast-provider";
 
-export default function NewsDetail() {
+import { type NewsArticle } from "@/utils/news";
+
+interface NewsDetailProps {
+  article: NewsArticle | null;
+  allNews: NewsArticle[];
+  backUrl?: string;
+  backLabel?: string;
+}
+
+export default function NewsDetail({ article, allNews, backUrl = "/", backLabel = "Kembali ke Beranda" }: NewsDetailProps) {
   const router = useRouter();
-  const params = useParams();
-  const articleId = params?.id as string;
 
-  const article = articleId ? getNewsById(articleId) : null;
-  const allNews = getPublishedNews();
+  const hasIncremented = useRef(false);
 
   useEffect(() => {
-    if (article && article.published) {
+    if (article && article.published && !hasIncremented.current) {
       incrementNewsViews(article.id);
+      hasIncremented.current = true;
     }
-  }, [article]);
+  }, [article?.id, article?.published]);
 
   if (!article || !article.published) {
     return (
@@ -77,6 +81,8 @@ export default function NewsDetail() {
     return colors[category] || "bg-slate-100 text-slate-700 border-slate-200";
   };
 
+  const { showToast } = useToast();
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -91,7 +97,7 @@ export default function NewsDetail() {
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href);
-      alert("Link artikel telah disalin ke clipboard!");
+      showToast("Link artikel telah disalin ke clipboard!", "success");
     }
   };
 
@@ -101,11 +107,11 @@ export default function NewsDetail() {
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          onClick={() => router.push("/")}
+          onClick={() => router.push(backUrl)}
           className="group flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition-all hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 hover:shadow-md"
         >
           <Home className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>Kembali ke Beranda</span>
+          <span>{backLabel}</span>
         </button>
         <button
           type="button"

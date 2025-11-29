@@ -184,8 +184,11 @@ export function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Get latest news articles (3 most recent)
-  const latestNews = getPublishedNews().slice(0, 3);
+  const [latestNews, setLatestNews] = useState<any[]>([]);
+
+  useEffect(() => {
+    setLatestNews(getPublishedNews().slice(0, 3));
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -207,11 +210,10 @@ export function LandingPage() {
     <div className="bg-slate-50 text-slate-900">
       {/* Navbar */}
       <header
-        className={`sticky top-0 z-40 border-b transition-all duration-300 ${
-          scrolled
-            ? "border-slate-200 bg-white shadow-sm"
-            : "border-slate-200/50 bg-white/95 backdrop-blur-md"
-        }`}
+        className={`sticky top-0 z-40 border-b transition-all duration-300 ${scrolled
+          ? "border-slate-200 bg-white shadow-sm"
+          : "border-slate-200/50 bg-white/95 backdrop-blur-md"
+          }`}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -270,28 +272,28 @@ export function LandingPage() {
           </button>
         </div>
 
-          {/* Mobile Navigation */}
-          {mobileMenuOpen && (
-            <nav className="border-t border-slate-200 bg-white px-4 py-4 md:hidden">
-              <div className="space-y-2">
-                {["Fitur", "Cara Kerja", "Kenapa Kami", "Peran"].map((item) => (
-                  <button
-                    key={item}
-                    onClick={() => scrollToSection(item.toLowerCase().replace(" ", "-"))}
-                    className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#001B34]"
-                  >
-                    {item}
-                  </button>
-                ))}
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <nav className="border-t border-slate-200 bg-white px-4 py-4 md:hidden">
+            <div className="space-y-2">
+              {["Fitur", "Cara Kerja", "Kenapa Kami", "Peran"].map((item) => (
                 <button
-                  onClick={() => {
-                    router.push("/news");
-                    setMobileMenuOpen(false);
-                  }}
+                  key={item}
+                  onClick={() => scrollToSection(item.toLowerCase().replace(" ", "-"))}
                   className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#001B34]"
                 >
-                  Berita
+                  {item}
                 </button>
+              ))}
+              <button
+                onClick={() => {
+                  router.push("/news");
+                  setMobileMenuOpen(false);
+                }}
+                className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#001B34]"
+              >
+                Berita
+              </button>
               <button
                 onClick={() => router.push("/login")}
                 className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#001B34]"
@@ -617,7 +619,7 @@ export function LandingPage() {
             ))}
           </div>
         </section>
-        
+
         {/* Mitra Kami */}
         <section id="mitra" className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl text-center">
@@ -639,7 +641,7 @@ export function LandingPage() {
                 className="flex items-center justify-center opacity-90 transition-all hover:scale-110 hover:opacity-100"
                 style={{ animationDelay: `${index * 200}ms` }}
               >
-                <Image
+                <img
                   src={partner.logo}
                   alt={partner.name}
                   width={150}
@@ -684,17 +686,16 @@ export function LandingPage() {
                         />
                         <div className="absolute left-3 top-3">
                           <span
-                            className={`rounded-full border px-2.5 py-1 text-xs font-semibold backdrop-blur-sm ${
-                              article.category === "Teknologi"
-                                ? "bg-blue-500/20 text-blue-700 border-blue-300"
-                                : article.category === "Tips"
-                                  ? "bg-green-500/20 text-green-700 border-green-300"
-                                  : article.category === "Berita"
-                                    ? "bg-purple-500/20 text-purple-700 border-purple-300"
-                                    : article.category === "Update"
-                                      ? "bg-orange-500/20 text-orange-700 border-orange-300"
-                                      : "bg-indigo-500/20 text-indigo-700 border-indigo-300"
-                            }`}
+                            className={`rounded-full border px-2.5 py-1 text-xs font-semibold backdrop-blur-sm ${article.category === "Teknologi"
+                              ? "bg-blue-500/20 text-blue-700 border-blue-300"
+                              : article.category === "Tips"
+                                ? "bg-green-500/20 text-green-700 border-green-300"
+                                : article.category === "Berita"
+                                  ? "bg-purple-500/20 text-purple-700 border-purple-300"
+                                  : article.category === "Update"
+                                    ? "bg-orange-500/20 text-orange-700 border-orange-300"
+                                    : "bg-indigo-500/20 text-indigo-700 border-indigo-300"
+                              }`}
                           >
                             {article.category}
                           </span>
@@ -705,17 +706,16 @@ export function LandingPage() {
                       {!article.featuredImage && (
                         <div className="mb-3">
                           <span
-                            className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                              article.category === "Teknologi"
-                                ? "bg-blue-500/10 text-blue-700 border-blue-200"
-                                : article.category === "Tips"
-                                  ? "bg-green-500/10 text-green-700 border-green-200"
-                                  : article.category === "Berita"
-                                    ? "bg-purple-500/10 text-purple-700 border-purple-200"
-                                    : article.category === "Update"
-                                      ? "bg-orange-500/10 text-orange-700 border-orange-200"
-                                      : "bg-indigo-500/10 text-indigo-700 border-indigo-200"
-                            }`}
+                            className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${article.category === "Teknologi"
+                              ? "bg-blue-500/10 text-blue-700 border-blue-200"
+                              : article.category === "Tips"
+                                ? "bg-green-500/10 text-green-700 border-green-200"
+                                : article.category === "Berita"
+                                  ? "bg-purple-500/10 text-purple-700 border-purple-200"
+                                  : article.category === "Update"
+                                    ? "bg-orange-500/10 text-orange-700 border-orange-200"
+                                    : "bg-indigo-500/10 text-indigo-700 border-indigo-200"
+                              }`}
                           >
                             {article.category}
                           </span>

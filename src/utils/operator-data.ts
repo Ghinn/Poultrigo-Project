@@ -7,10 +7,18 @@ export interface Kandang {
   population: number;
   age: number; // in days
   status: "Optimal" | "Peringatan" | "Kritis";
-  temp: string;
-  humidity: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface KandangHistory {
+  id: string;
+  kandangId: string;
+  kandangName: string;
+  action: "Created" | "Updated";
+  population: number;
+  age: number;
+  timestamp: string;
 }
 
 export interface DailyRecord {
@@ -26,7 +34,26 @@ export interface DailyRecord {
 }
 
 const KANDANG_STORAGE_KEY = "poultrigo_kandang";
+const KANDANG_HISTORY_STORAGE_KEY = "poultrigo_kandang_history";
 const DAILY_RECORDS_STORAGE_KEY = "poultrigo_daily_records";
+
+// History CRUD
+export function getKandangHistory(): KandangHistory[] {
+  if (typeof window === "undefined") return [];
+  const data = localStorage.getItem(KANDANG_HISTORY_STORAGE_KEY);
+  return data ? JSON.parse(data) : [];
+}
+
+export function addKandangHistory(history: Omit<KandangHistory, "id">): KandangHistory {
+  const histories = getKandangHistory();
+  const newHistory: KandangHistory = {
+    ...history,
+    id: `H${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+  };
+  histories.unshift(newHistory); // Add to beginning
+  localStorage.setItem(KANDANG_HISTORY_STORAGE_KEY, JSON.stringify(histories));
+  return newHistory;
+}
 
 // Kandang CRUD
 export function getKandangs(): Kandang[] {
@@ -41,8 +68,6 @@ export function getKandangs(): Kandang[] {
         population: 1500,
         age: 25,
         status: "Optimal",
-        temp: "28°C",
-        humidity: "65%",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -52,8 +77,6 @@ export function getKandangs(): Kandang[] {
         population: 1450,
         age: 20,
         status: "Peringatan",
-        temp: "31°C",
-        humidity: "70%",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -63,8 +86,6 @@ export function getKandangs(): Kandang[] {
         population: 1600,
         age: 30,
         status: "Optimal",
-        temp: "27°C",
-        humidity: "63%",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -74,8 +95,6 @@ export function getKandangs(): Kandang[] {
         population: 1550,
         age: 18,
         status: "Optimal",
-        temp: "28°C",
-        humidity: "66%",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -96,6 +115,17 @@ export function saveKandang(kandang: Omit<Kandang, "id" | "createdAt" | "updated
   };
   kandangs.push(newKandang);
   localStorage.setItem(KANDANG_STORAGE_KEY, JSON.stringify(kandangs));
+
+  // Add History
+  addKandangHistory({
+    kandangId: newKandang.id,
+    kandangName: newKandang.name,
+    action: "Created",
+    population: newKandang.population,
+    age: newKandang.age,
+    timestamp: new Date().toISOString(),
+  });
+
   return newKandang;
 }
 
@@ -103,27 +133,39 @@ export function updateKandang(kandangId: string, updates: Partial<Omit<Kandang, 
   if (typeof window === "undefined") return null;
   const kandangs = getKandangs();
   const kandangIndex = kandangs.findIndex((k) => k.id === kandangId);
-  
+
   if (kandangIndex === -1) return null;
-  
+
   const kandang = kandangs[kandangIndex];
-  kandangs[kandangIndex] = {
+  const updatedKandang = {
     ...kandang,
     ...updates,
     updatedAt: new Date().toISOString(),
   };
-  
+  kandangs[kandangIndex] = updatedKandang;
+
   localStorage.setItem(KANDANG_STORAGE_KEY, JSON.stringify(kandangs));
-  return kandangs[kandangIndex];
+
+  // Add History
+  addKandangHistory({
+    kandangId: updatedKandang.id,
+    kandangName: updatedKandang.name,
+    action: "Updated",
+    population: updatedKandang.population,
+    age: updatedKandang.age,
+    timestamp: new Date().toISOString(),
+  });
+
+  return updatedKandang;
 }
 
 export function deleteKandang(kandangId: string): boolean {
   if (typeof window === "undefined") return false;
   const kandangs = getKandangs();
   const filteredKandangs = kandangs.filter((k) => k.id !== kandangId);
-  
+
   if (filteredKandangs.length === kandangs.length) return false;
-  
+
   localStorage.setItem(KANDANG_STORAGE_KEY, JSON.stringify(filteredKandangs));
   return true;
 }
@@ -161,14 +203,14 @@ export function updateDailyRecord(recordId: string, updates: Partial<Omit<DailyR
   if (typeof window === "undefined") return null;
   const records = getDailyRecords();
   const recordIndex = records.findIndex((r) => r.id === recordId);
-  
+
   if (recordIndex === -1) return null;
-  
+
   records[recordIndex] = {
     ...records[recordIndex],
     ...updates,
   };
-  
+
   localStorage.setItem(DAILY_RECORDS_STORAGE_KEY, JSON.stringify(records));
   return records[recordIndex];
 }
@@ -177,9 +219,9 @@ export function deleteDailyRecord(recordId: string): boolean {
   if (typeof window === "undefined") return false;
   const records = getDailyRecords();
   const filteredRecords = records.filter((r) => r.id !== recordId);
-  
+
   if (filteredRecords.length === records.length) return false;
-  
+
   localStorage.setItem(DAILY_RECORDS_STORAGE_KEY, JSON.stringify(filteredRecords));
   return true;
 }
