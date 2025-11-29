@@ -6,10 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "ml": "python ml_service/app.py",
-    "ml:train": "python ml_service/train_model.py",
-    "dev:all": "concurrently \"npm run dev\" \"npm run ml\""
+    "lint": "eslint"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

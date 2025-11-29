@@ -52,9 +52,9 @@ interface Product {
 }
 
 interface CartItem {
-  id: number;
+  id: string;
   quantity: number;
-  product_id: number;
+  product_id: string;
   name: string;
   price: number;
   stock: number;
@@ -104,11 +104,11 @@ export function GuestDashboard({
     }
   };
 
-  const handleUpdateCart = async (cartItemId: number, newQty: number) => {
+  const handleUpdateCart = async (cartItemId: string, newQty: number) => {
     if (newQty < 1) return;
     setCartLoading(true);
     const formData = new FormData();
-    formData.append('cart_item_id', cartItemId.toString());
+    formData.append('cart_item_id', cartItemId);
     formData.append('quantity', newQty.toString());
 
     const res = await updateCart(null, formData);
@@ -117,7 +117,7 @@ export function GuestDashboard({
     else router.refresh();
   };
 
-  const handleRemoveFromCart = async (id: number) => {
+  const handleRemoveFromCart = async (id: string) => {
     if (!confirm('Hapus item ini?')) return;
     setCartLoading(true);
     const res = await removeFromCart(id);
