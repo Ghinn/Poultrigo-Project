@@ -20,12 +20,6 @@ import {
 import ImageWithFallback from "@/components/shared/image-with-fallback";
 import { getPublishedNews } from "@/utils/news";
 
-const heroStats = [
-  { label: "Rata-rata Berat Ayam", value: "1.8 kg" },
-  { label: "Kebutuhan Pakan Besok", value: "120 kg" },
-  { label: "Rekomendasi Per Ayam", value: "110 g/ekor" },
-];
-
 const featureCards = [
   {
     title: "Pemantauan Sensor Real-time",
@@ -171,11 +165,15 @@ const roleCards = [
 const partnerLogos = [
   {
     name: "PT. Japfa",
-    logo: "/Japfa_logo.svg",
+    logo: "Logo/Japfa_logo.svg",
   },
   {
-    name: "Institut Pertanian Bogor",
-    logo: "/Logo-IPB-New.png",
+    name: "Tekom",
+    logo: "Logo/Logo TEKOM.png",
+  },
+  {
+    name: "Sekolah Vokasi",
+    logo: "Logo/Logo Sekolah Vokasi.png",
   },
 ];
 
@@ -216,14 +214,15 @@ export function LandingPage() {
           }`}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg transition-transform hover:scale-105 sm:h-10 sm:w-10 sm:rounded-2xl">
-              <Activity className="h-4 w-4 text-white sm:h-5 sm:w-5" />
-            </div>
-            <div>
-              <p className="text-base font-semibold text-[#001B34] sm:text-lg">Poultrigo</p>
-              <p className="text-[10px] text-slate-500 sm:text-xs">Smart Poultry IoT</p>
-            </div>
+          <div className="flex items-center">
+            <Image
+              src="/logo/Logo Poultrigo_Primary.svg"
+              alt="Poultrigo"
+              width={160}
+              height={64}
+              className="h-10 w-auto sm:h-12"
+              priority
+            />
           </div>
 
           {/* Desktop Navigation */}
@@ -317,14 +316,25 @@ export function LandingPage() {
         <section className="relative overflow-hidden bg-gradient-to-br from-[#001B34] via-[#052348] to-[#001B34] px-4 py-12 text-white sm:px-6 sm:py-16">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute left-1/4 top-1/4 h-64 w-64 animate-pulse rounded-full bg-orange-500 blur-3xl" />
-            <div className="absolute bottom-1/4 right-1/4 h-64 w-64 animate-pulse rounded-full bg-blue-500 blur-3xl" style={{ animationDelay: "1s" }} />
+            <div className="absolute bottom-1/4 right-1/4 h-64 w-64 animate-pulse rounded-full bg-orange-400 blur-3xl" style={{ animationDelay: "1s" }} />
           </div>
           <div className="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-2 lg:gap-10">
             <div className="space-y-4 sm:space-y-5 lg:space-y-6 animate-fade-in-up">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs text-orange-200 backdrop-blur-sm sm:px-4 sm:text-sm">
+              {/* Logo with Tagline */}
+              <div className="mb-4 sm:mb-6">
+                <Image
+                  src="/logo/Logo Poultrigo_Tagline.svg"
+                  alt="Poultrigo - Predict, Feed, Grow"
+                  width={280}
+                  height={120}
+                  className="h-auto w-56 sm:w-64 lg:w-72"
+                  priority
+                />
+              </div>
+              <div className="inline-flex items-center gap-2 border-b-2 border-orange-500 pb-1 text-xs font-medium text-orange-400 sm:text-sm">
                 <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
                 Platform IoT + Machine Learning
-              </span>
+              </div>
               <h1 className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
                 Poultrigo – Platform IoT & ML Pintar untuk Peternakan Ayam
               </h1>
@@ -352,26 +362,31 @@ export function LandingPage() {
                 )}
               </div>
             </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur-sm sm:rounded-3xl sm:p-4">
-                <ImageWithFallback
-                  src="https://images.unsplash.com/photo-1697545698404-46828377ae9d?auto=format&fit=crop&w=1200&q=80"
-                  alt="Peternakan modern"
-                  className="h-56 w-full rounded-xl object-cover sm:h-64 lg:h-72 sm:rounded-2xl"
-                />
-                <div className="mt-3 grid gap-3 sm:mt-4 sm:grid-cols-3 sm:gap-4">
-                  {heroStats.map((stat, idx) => (
-                    <div
-                      key={stat.label}
-                      className="rounded-xl border border-white/10 bg-white/10 p-2.5 text-xs backdrop-blur-sm sm:rounded-2xl sm:p-3 sm:text-sm animate-scale-in"
-                      style={{ animationDelay: `${0.4 + idx * 0.1}s` }}
-                    >
-                      <p className="text-white/60">{stat.label}</p>
-                      <p className="mt-1 text-base font-semibold text-white sm:text-lg">
-                        {stat.value}
-                      </p>
-                    </div>
-                  ))}
+            <div className="relative animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+              {/* Decorative gradient overlay */}
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-orange-500/20 via-blue-500/20 to-purple-500/20 blur-2xl opacity-50 animate-pulse" style={{ animationDuration: "3s" }} />
+              
+              {/* Main image container with enhanced styling */}
+              <div className="relative overflow-hidden rounded-3xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 p-2 shadow-2xl backdrop-blur-md transition-all duration-500 hover:scale-[1.02] hover:border-white/30 hover:shadow-orange-500/20 sm:rounded-[2rem] sm:p-3">
+                {/* Animated shimmer effect */}
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                
+                <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl">
+                  <ImageWithFallback
+                    src="https://images.unsplash.com/photo-1697545698404-46828377ae9d?auto=format&fit=crop&w=1400&q=90"
+                    alt="Peternakan modern dengan teknologi IoT"
+                    className="h-[400px] w-full object-cover transition-transform duration-700 hover:scale-110 sm:h-[500px] lg:h-[600px]"
+                  />
+                  
+                  {/* Gradient overlay untuk depth */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#001B34]/40 via-transparent to-transparent" />
+                  
+                  {/* Floating particles effect */}
+                  <div className="absolute inset-0 overflow-hidden">
+                    <div className="absolute top-1/4 left-1/4 h-2 w-2 rounded-full bg-orange-400/60 animate-float" style={{ animationDelay: "0s", animationDuration: "3s" }} />
+                    <div className="absolute top-1/3 right-1/3 h-1.5 w-1.5 rounded-full bg-orange-400/60 animate-float" style={{ animationDelay: "1s", animationDuration: "4s" }} />
+                    <div className="absolute bottom-1/4 left-1/3 h-2 w-2 rounded-full bg-orange-300/60 animate-float" style={{ animationDelay: "2s", animationDuration: "3.5s" }} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -382,9 +397,10 @@ export function LandingPage() {
         <section id="fitur" className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2 lg:gap-10">
             <div className="space-y-4 sm:space-y-5 lg:space-y-6 animate-fade-in-up">
-              <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs text-orange-600 sm:px-4 sm:text-sm">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-orange-600 sm:text-sm">
+                <span className="h-0.5 w-8 bg-orange-600"></span>
                 Tentang Poultrigo
-              </span>
+              </div>
               <h2 className="text-2xl font-semibold text-[#001B34] sm:text-3xl">
                 Masa Depan Manajemen Peternakan Ayam
               </h2>
@@ -442,9 +458,10 @@ export function LandingPage() {
         {/* How it works */}
         <section id="cara-kerja" className="bg-slate-100 px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl text-center">
-            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-600 sm:px-4 sm:text-sm">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-orange-600 sm:text-sm">
+              <span className="h-0.5 w-8 bg-orange-600"></span>
               Cara Kerja
-            </span>
+            </div>
             <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
               Sistem sederhana namun kuat
             </h3>
@@ -507,9 +524,10 @@ export function LandingPage() {
         {/* Features */}
         <section id="kenapa-kami" className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl text-center">
-            <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700 sm:px-4 sm:text-sm">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-orange-600 sm:text-sm">
+              <span className="h-0.5 w-8 bg-orange-600"></span>
               Fitur Inti
-            </span>
+            </div>
             <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
               Semua yang Anda butuhkan dalam satu platform
             </h3>
@@ -539,9 +557,10 @@ export function LandingPage() {
         {/* Why choose */}
         <section className="bg-slate-100 px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl text-center">
-            <span className="rounded-full bg-purple-100 px-3 py-1 text-xs text-purple-600 sm:px-4 sm:text-sm">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-orange-600 sm:text-sm">
+              <span className="h-0.5 w-8 bg-orange-600"></span>
               Mengapa Poultrigo
-            </span>
+            </div>
             <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
               Dibangun untuk peternak modern
             </h3>
@@ -572,9 +591,10 @@ export function LandingPage() {
 
         <section id="peran" className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl text-center">
-            <span className="rounded-full bg-rose-100 px-3 py-1 text-xs text-rose-600 sm:px-4 sm:text-sm">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-orange-600 sm:text-sm">
+              <span className="h-0.5 w-8 bg-orange-600"></span>
               Roles & Access
-            </span>
+            </div>
             <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
               Pembagian peran dalam sistem Poultrigo
             </h3>
@@ -623,9 +643,10 @@ export function LandingPage() {
         {/* Mitra Kami */}
         <section id="mitra" className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl text-center">
-            <span className="rounded-full bg-teal-100 px-3 py-1 text-xs text-teal-600 sm:px-4 sm:text-sm">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-orange-600 sm:text-sm">
+              <span className="h-0.5 w-8 bg-orange-600"></span>
               Mitra Kami
-            </span>
+            </div>
             <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
               Dipercaya oleh integrator dan produsen pakan besar
             </h3>
@@ -658,9 +679,10 @@ export function LandingPage() {
           <section id="berita" className="px-4 py-12 sm:px-6 sm:py-16">
             <div className="mx-auto max-w-7xl">
               <div className="mb-8 text-center">
-                <span className="rounded-full bg-orange-100 px-3 py-1 text-xs text-orange-600 sm:px-4 sm:text-sm">
+                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-orange-600 sm:text-sm">
+                  <span className="h-0.5 w-8 bg-orange-600"></span>
                   Berita & Artikel
-                </span>
+                </div>
                 <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
                   Berita Terbaru dari Poultrigo
                 </h3>
@@ -761,6 +783,95 @@ export function LandingPage() {
           </section>
         )}
 
+        {/* Tim Pengembang */}
+        <section id="tim" className="bg-slate-100 px-4 py-12 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-8 text-center">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-orange-600 sm:text-sm">
+                <span className="h-0.5 w-8 bg-orange-600"></span>
+                Tim Pengembang
+              </div>
+              <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
+                Tim di Balik Poultrigo
+              </h3>
+              <p className="mt-2 text-sm text-slate-600 sm:text-base">
+                Tim profesional yang berdedikasi untuk menghadirkan solusi terbaik bagi peternakan modern
+              </p>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-3 sm:gap-8">
+              {/* Ghina Rania */}
+              <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all hover:-translate-y-2 hover:shadow-2xl animate-fade-in-up sm:p-8" style={{ animationDelay: "0.2s" }}>
+                <div className="relative mb-4 flex justify-center">
+                  <div className="relative aspect-square h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
+                    <ImageWithFallback
+                      src="/team/Ghina Rania.png"
+                      alt="Ghina Rania"
+                      className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                      style={{ objectFit: 'cover', objectPosition: 'center' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent" />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <h4 className="mb-1 text-lg font-bold text-[#001B34] sm:text-xl">Ghina Rania</h4>
+                  <div className="mb-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600 sm:text-sm">
+                    <span className="border-b border-orange-500 px-1 pb-0.5 font-medium text-[#001B34]">Quality Assurance</span>
+                    <span className="border-b border-[#001B34] px-1 pb-0.5 font-medium text-[#001B34]">UI/UX Designer</span>
+                    <span className="border-b border-orange-500 px-1 pb-0.5 font-medium text-[#001B34]">Frontend Developer</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Muhammad Rizki - Project Manager (Center) */}
+              <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all hover:-translate-y-2 hover:shadow-2xl animate-fade-in-up sm:p-8 order-first sm:order-none" style={{ animationDelay: "0.1s" }}>
+                <div className="relative mb-4 flex justify-center">
+                  <div className="relative aspect-square h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
+                    <ImageWithFallback
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"
+                      alt="Muhammad Rizki"
+                      className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                      style={{ objectFit: 'cover', objectPosition: 'center' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent" />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <h4 className="mb-1 text-lg font-bold text-[#001B34] sm:text-xl">Muhammad Rizki</h4>
+                  <div className="mb-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600 sm:text-sm">
+                    <span className="border-b border-orange-500 px-1 pb-0.5 font-medium text-[#001B34]">Project Manager</span>
+                    <span className="border-b border-[#001B34] px-1 pb-0.5 font-medium text-[#001B34]">System Architect</span>
+                    <span className="border-b border-orange-500 px-1 pb-0.5 font-medium text-[#001B34]">Database Designer</span>
+                    <span className="border-b border-[#001B34] px-1 pb-0.5 font-medium text-[#001B34]">Backend Developer</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fatimah Azzahidah */}
+              <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all hover:-translate-y-2 hover:shadow-2xl animate-fade-in-up sm:p-8" style={{ animationDelay: "0.3s" }}>
+                <div className="relative mb-4 flex justify-center">
+                  <div className="relative aspect-square h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
+                    <ImageWithFallback
+                      src="/team/Fatimah Az-Zahidah.png"
+                      alt="Fatimah Azzahidah"
+                      className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                      style={{ objectFit: 'cover', objectPosition: 'center' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent" />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <h4 className="mb-1 text-lg font-bold text-[#001B34] sm:text-xl">Fatimah Azzahidah</h4>
+                  <div className="mb-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600 sm:text-sm">
+                    <span className="border-b border-orange-500 px-1 pb-0.5 font-medium text-[#001B34]">Project Assistant</span>
+                    <span className="border-b border-[#001B34] px-1 pb-0.5 font-medium text-[#001B34]">Documentation Specialist</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* CTA */}
         <section className="bg-gradient-to-r from-[#001B34] to-[#032247] px-4 py-12 text-white sm:px-6 sm:py-16">
           <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 text-center animate-fade-in-up">
@@ -792,14 +903,14 @@ export function LandingPage() {
       <footer className="bg-[#001B34] px-4 py-8 text-xs text-white/80 sm:px-6 sm:py-12 sm:text-sm">
         <div className="mx-auto grid max-w-7xl gap-6 sm:grid-cols-2 md:grid-cols-4 sm:gap-8">
           <div>
-            <div className="mb-3 flex items-center gap-2 sm:mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500 text-white sm:h-10 sm:w-10 sm:rounded-xl">
-                <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
-              <div>
-                <p className="font-semibold text-white sm:text-sm">Poultrigo</p>
-                <p className="text-[10px] text-slate-300 sm:text-xs">Smart Poultry IoT</p>
-              </div>
+            <div className="mb-3 sm:mb-4">
+              <Image
+                src="/logo/Logo Poultrigo_Primary.svg"
+                alt="Poultrigo"
+                width={180}
+                height={72}
+                className="h-auto w-36 sm:w-40"
+              />
             </div>
             <p className="text-xs leading-relaxed sm:text-sm">
               Transformasikan peternakan Anda dengan teknologi IoT dan machine learning

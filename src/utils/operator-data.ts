@@ -231,3 +231,4 @@ export function getDailyRecordById(recordId: string): DailyRecord | undefined {
   return records.find((r) => r.id === recordId);
 }
 
+
