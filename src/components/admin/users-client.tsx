@@ -10,6 +10,8 @@ interface User {
     name: string;
     email: string;
     role: string;
+    status?: string;
+    last_login?: string | Date;
 }
 
 export default function UsersClient({ users }: { users: User[] }) {
@@ -108,9 +110,9 @@ export default function UsersClient({ users }: { users: User[] }) {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${(user.status || 'active') === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                         }`}>
-                                        {user.status}
+                                        {user.status || 'active'}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-slate-500">
@@ -214,7 +216,7 @@ export default function UsersClient({ users }: { users: User[] }) {
                             </div>
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-slate-700">Status</label>
-                                <select name="status" defaultValue={editingUser.status} className="w-full rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-orange-500">
+                                <select name="status" defaultValue={editingUser.status || 'active'} className="w-full rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-orange-500">
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
                                 </select>

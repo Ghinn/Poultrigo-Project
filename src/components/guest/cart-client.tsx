@@ -33,10 +33,10 @@ export default function CartClient({ cart }: { cart: { items: CartItem[], total:
         if (res?.error) showToast(res.error, "error")
     }
 
-    async function handleRemove(id: number) {
+    async function handleRemove(id: string) {
         if (!confirm('Remove this item?')) return
         setIsLoading(true)
-        const res = await removeFromCart(id.toString())
+        const res = await removeFromCart(id)
         setIsLoading(false)
         if (res?.error) showToast(res.error, "error")
         else showToast("Item removed from cart", "success")
