@@ -2,8 +2,8 @@
 
 import { FormEvent, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import {
-  Activity,
   Lock,
   Mail,
   ArrowLeft,
@@ -77,16 +77,15 @@ export function LoginPage() {
       <div className="relative z-10 flex min-h-[calc(100vh-80px)] items-center justify-center px-4 pb-8 sm:min-h-[calc(100vh-96px)] sm:px-6 sm:pb-12">
         <div className="grid w-full max-w-6xl items-center gap-8 lg:grid-cols-2 lg:gap-12">
           <div className="hidden space-y-6 text-white lg:block">
-            <div className="mb-8 flex items-center gap-3">
-              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-2xl">
-                <Activity className="h-9 w-9 text-white" />
-              </div>
-              <div>
-                <div className="text-3xl tracking-tight">Poultrigo</div>
-                <div className="text-sm text-slate-300">
-                  Platform Operasional Peternakan Ayam
-                </div>
-              </div>
+            <div className="mb-8">
+              <Image
+                src="/logo/Logo Poultrigo_Tagline.svg"
+                alt="Poultrigo - Predict, Feed, Grow"
+                width={280}
+                height={120}
+                className="h-auto w-56 lg:w-64"
+                priority
+              />
             </div>
             <h1 className="text-4xl leading-tight">
               Selamat datang kembali di dasbor peternakan Anda

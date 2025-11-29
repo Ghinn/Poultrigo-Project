@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Shield,
   Users,
@@ -366,9 +367,13 @@ export function AdminDashboard() {
           <div className="border-b border-orange-400/30 p-4 sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
+                <Image
+                  src="/logo/Logo Poultrigo_Logomark.svg"
+                  alt="Poultrigo"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10"
+                />
                 <div>
                   <div className="font-semibold text-white">Poultrigo</div>
                   <div className="text-xs text-orange-100">Admin Developer</div>
