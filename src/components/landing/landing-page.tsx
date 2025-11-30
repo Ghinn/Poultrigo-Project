@@ -368,22 +368,24 @@ export function LandingPage() {
             <div className="relative animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
               {/* Decorative gradient overlay */}
               <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-orange-500/20 via-blue-500/20 to-purple-500/20 blur-2xl opacity-50 animate-pulse" style={{ animationDuration: "3s" }} />
-              
+
+
               {/* Main image container with enhanced styling */}
               <div className="relative overflow-hidden rounded-3xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 p-2 shadow-2xl backdrop-blur-md transition-all duration-500 hover:scale-[1.02] hover:border-white/30 hover:shadow-orange-500/20 sm:rounded-[2rem] sm:p-3">
                 {/* Animated shimmer effect */}
                 <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                
+
+
                 <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl">
                   <ImageWithFallback
                     src="https://images.unsplash.com/photo-1697545698404-46828377ae9d?auto=format&fit=crop&w=1400&q=90"
                     alt="Peternakan modern dengan teknologi IoT"
                     className="h-[400px] w-full object-cover transition-transform duration-700 hover:scale-110 sm:h-[500px] lg:h-[600px]"
                   />
-                  
+
                   {/* Gradient overlay untuk depth */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#001B34]/40 via-transparent to-transparent" />
-                  
+
                   {/* Floating particles effect */}
                   <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute top-1/4 left-1/4 h-2 w-2 rounded-full bg-orange-400/60 animate-float" style={{ animationDelay: "0s", animationDuration: "3s" }} />
@@ -831,7 +833,8 @@ export function LandingPage() {
                 <div className="relative mb-4 flex justify-center">
                   <div className="relative aspect-square h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
                     <ImageWithFallback
-                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"
+                      src="/Team/Muhammad Rizki.jpg"
+
                       alt="Muhammad Rizki"
                       className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
                       style={{ objectFit: 'cover', objectPosition: 'center' }}
