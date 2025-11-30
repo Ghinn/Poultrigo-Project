@@ -9,7 +9,8 @@ interface UserDocument {
     _id: string;
     name: string;
     email: string;
-    role: string;
+    password: string;
+    role: "guest" | "operator" | "admin";
     created_at?: Date;
     last_login?: Date;
 }
@@ -21,8 +22,8 @@ export async function getUsers() {
         // Map _id to id to match interface if needed, but User model uses string _id manually set as id.
         // Wait, my User model has `_id: { type: String }`. So `_id` IS the id.
         // But Mongoose returns `_id`.
-        return users.map((u: UserDocument) => ({ 
-            ...u, 
+        return (users as any[]).map((u: UserDocument) => ({
+            ...u,
             id: u._id,
             createdAt: u.created_at ? u.created_at.toISOString() : new Date().toISOString(),
             last_login: u.last_login ? (typeof u.last_login === 'string' ? u.last_login : u.last_login.toISOString()) : undefined
