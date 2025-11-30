@@ -83,7 +83,7 @@ export function OperatorDashboard() {
   const router = useRouter();
   const isClient = useIsClient();
   const [activeTab, setActiveTab] = useState<
-    "overview" | "kandang" | "monitoring" | "daily" | "reports" | "news" | "devices" | "prediction"
+    "overview" | "kandang" | "daily" | "reports" | "news" | "devices" | "prediction"
   >("overview");
 
   // CRUD State for Kandang
@@ -121,6 +121,19 @@ export function OperatorDashboard() {
     status: "Menunggu" as "Selesai" | "Menunggu" | "Terlewat",
     notes: "",
   });
+
+  // Load functions for manual refresh
+  const loadKandangs = useCallback(() => {
+    if (isClient) {
+      setKandangs(getKandangs());
+    }
+  }, [isClient]);
+
+  const loadDailyRecords = useCallback(() => {
+    if (isClient) {
+      setDailyRecords(getDailyRecords());
+    }
+  }, [isClient]);
 
   // History State
   const loadHistoryAndPredictions = useCallback(() => {
@@ -193,6 +206,272 @@ export function OperatorDashboard() {
     );
   }
 
+  const sensorData = [
+    { time: "00:00", temp: 27, humidity: 68, ammonia: 15 },
+    { time: "04:00", temp: 26, humidity: 70, ammonia: 18 },
+    { time: "08:00", temp: 28, humidity: 65, ammonia: 20 },
+    { time: "12:00", temp: 30, humidity: 62, ammonia: 22 },
+    { time: "16:00", temp: 29, humidity: 64, ammonia: 19 },
+    { time: "20:00", temp: 28, humidity: 67, ammonia: 17 },
+  ];
+
+  // Filter daily records by selected date
+  const filteredDailyRecords = dailyRecords.filter((r) => r.date === selectedDate);
+
+  const alerts = [
+    {
+      id: 1,
+      type: "warning",
+      kandang: "Kandang A2",
+      message: "Suhu di atas normal (31°C)",
+      time: "5 menit lalu",
+    },
+    {
+      id: 2,
+      type: "info",
+      kandang: "Kandang B1",
+      message: "Waktu pemberian pakan akan segera tiba",
+      time: "15 menit lalu",
+    },
+    {
+      id: 3,
+      type: "warning",
+      kandang: "Kandang A2",
+      message: "Kelembaban tinggi (70%)",
+      time: "30 menit lalu",
+    },
+  ];
+
+  // CRUD Functions for Kandang
+  const handleOpenCreateKandang = () => {
+    setKandangFormData({
+      name: "",
+      population: 0,
+      age: 0,
+      status: "Optimal",
+    });
+    setSelectedKandang(null);
+    setModalMode("create-kandang");
+    setError("");
+  };
+
+  const handleOpenEditKandang = (kandang: Kandang) => {
+    setKandangFormData({
+      name: kandang.name,
+      population: kandang.population,
+      age: kandang.age,
+      status: kandang.status,
+    });
+    setSelectedKandang(kandang);
+    setModalMode("edit-kandang");
+    setError("");
+  };
+
+  const handleOpenViewKandang = (kandang: Kandang) => {
+    setSelectedKandang(kandang);
+    setModalMode("view-kandang");
+  };
+
+  const handleSaveKandang = () => {
+    setError("");
+
+    if (!kandangFormData.name.trim()) {
+      setError("Nama kandang wajib diisi");
+      return;
+    }
+    if (kandangFormData.population <= 0) {
+      setError("Populasi harus lebih dari 0");
+      return;
+    }
+    if (kandangFormData.age < 0) {
+      setError("Usia tidak boleh negatif");
+      return;
+    }
+
+    if (modalMode === "create-kandang") {
+      saveKandang(kandangFormData);
+    } else if (modalMode === "edit-kandang" && selectedKandang) {
+      updateKandang(selectedKandang.id, kandangFormData);
+    }
+
+    loadKandangs();
+    loadHistoryAndPredictions(); // Refresh history
+    setModalMode(null);
+    setSelectedKandang(null);
+  };
+
+  const handleDeleteKandang = (kandangId: string) => {
+    if (confirm("Apakah Anda yakin ingin menghapus kandang ini?")) {
+      deleteKandang(kandangId);
+      loadKandangs();
+      if (selectedKandang?.id === kandangId) {
+        setModalMode(null);
+        setSelectedKandang(null);
+      }
+    }
+  };
+
+  // CRUD Functions for Daily Records
+  const handleOpenCreateDaily = () => {
+    // Get current time in HH:MM format
+    const now = new Date();
+    const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+    setRecordFormData({
+      date: selectedDate,
+      kandangId: "",
+      kandangName: "",
+      task: "",
+      time: currentTime, // Auto-fill with current system time
+      status: "Menunggu",
+      notes: "",
+    });
+    setSelectedRecord(null);
+    setModalMode("create-daily");
+    setError("");
+  };
+
+  const handleOpenEditDaily = (record: DailyRecord) => {
+    setRecordFormData({
+      date: record.date,
+      kandangId: record.kandangId,
+      kandangName: record.kandangName,
+      task: record.task,
+      time: record.time,
+      status: record.status,
+      notes: record.notes || "",
+    });
+    setSelectedRecord(record);
+    setModalMode("edit-daily");
+    setError("");
+  };
+
+  const handleSaveDailyRecord = () => {
+    setError("");
+
+    if (!recordFormData.task.trim()) {
+      setError("Nama tugas wajib diisi");
+      return;
+    }
+    if (!recordFormData.kandangId) {
+      setError("Pilih kandang");
+      return;
+    }
+    if (!recordFormData.time.trim()) {
+      setError("Waktu wajib diisi");
+      return;
+    }
+
+    if (modalMode === "create-daily") {
+      saveDailyRecord(recordFormData);
+    } else if (modalMode === "edit-daily" && selectedRecord) {
+      updateDailyRecord(selectedRecord.id, recordFormData);
+    }
+
+    loadDailyRecords();
+    setModalMode(null);
+    setSelectedRecord(null);
+  };
+
+  const handleDeleteDailyRecord = (recordId: string) => {
+    if (confirm("Apakah Anda yakin ingin menghapus catatan ini?")) {
+      deleteDailyRecord(recordId);
+      loadDailyRecords();
+      if (selectedRecord?.id === recordId) {
+        setModalMode(null);
+        setSelectedRecord(null);
+      }
+    }
+  };
+
+  // Device CRUD
+  const handleOpenCreateDevice = () => {
+    setDeviceFormData({
+      name: "",
+      type: "Feeder",
+      kandangId: kandangs.length > 0 ? kandangs[0].id : "",
+    });
+    setModalMode("create-device");
+    setError("");
+  };
+
+  const handleSaveDevice = () => {
+    setError("");
+    if (!deviceFormData.name.trim()) {
+      setError("Nama perangkat wajib diisi");
+      return;
+    }
+    if (!deviceFormData.kandangId) {
+      setError("Pilih kandang untuk perangkat ini");
+      return;
+    }
+
+    saveDevice({
+      ...deviceFormData,
+      status: "Inactive",
+      batteryLevel: 100,
+      lastActive: new Date().toISOString(),
+    });
+
+    loadDevices();
+    setModalMode(null);
+  };
+
+  const handleToggleDeviceStatus = (device: Device) => {
+    const newStatus = device.status === "Active" ? "Inactive" : "Active";
+    updateDevice(device.id, {
+      status: newStatus,
+      lastActive: new Date().toISOString(),
+    });
+    loadDevices();
+  };
+
+  // Prediction Logic
+  const handleCalculatePrediction = () => {
+    setError("");
+    if (!predictionForm.kandangId) {
+      setError("Pilih kandang terlebih dahulu");
+      return;
+    }
+    if (predictionForm.population <= 0) {
+      setError("Populasi harus lebih dari 0");
+      return;
+    }
+
+    // Mock Prediction Logic: (Population * 0.12) - Leftover
+    // In real app, this would call the ML API
+    const baseNeed = predictionForm.gender === "Jantan" ? 0.12 : 0.11;
+    const predictedAmount = Math.round((predictionForm.population * baseNeed) - predictionForm.leftover);
+
+    setPredictionResult(predictedAmount);
+
+    // Save to history
+    const kandangName = kandangs.find(k => k.id === predictionForm.kandangId)?.name || "Unknown";
+    savePrediction({
+      date: new Date().toISOString(),
+      kandangId: predictionForm.kandangId,
+      kandangName: kandangName,
+      inputs: predictionForm,
+      result: predictedAmount,
+    });
+
+    // Reload predictions for report
+    if (isClient) {
+      setPredictions(getPredictions());
+    }
+  };
+
+  const handlePrintReport = () => {
+    window.print();
+  };
+
+  const handleCloseModal = () => {
+    setModalMode(null);
+    setSelectedKandang(null);
+    setSelectedRecord(null);
+    setError("");
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Mobile Overlay */}
@@ -240,7 +519,6 @@ export function OperatorDashboard() {
             {[
               { id: "overview", label: "Beranda", icon: Gauge },
               { id: "kandang", label: "Kelola Kandang", icon: Home },
-              { id: "monitoring", label: "Monitoring Sensor", icon: Activity },
               { id: "daily", label: "Data Harian", icon: Calendar },
               { id: "reports", label: "Laporan", icon: BarChart3 },
               { id: "devices", label: "Perangkat", icon: Cpu },
@@ -654,117 +932,6 @@ export function OperatorDashboard() {
             </div>
           )}
 
-          {activeTab === "monitoring" && (
-            <div className="space-y-6">
-
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {[
-                  {
-                    label: "Suhu Rata-rata",
-                    value: "28.5°C",
-                    icon: Thermometer,
-                    color: "bg-orange-500",
-                    status: "Normal",
-                  },
-                  {
-                    label: "Kelembaban",
-                    value: "65.2%",
-                    icon: Droplets,
-                    color: "bg-blue-500",
-                    status: "Normal",
-                  },
-                  {
-                    label: "Level Amonia",
-                    value: "Low",
-                    icon: Wind,
-                    color: "bg-green-500",
-                    status: "Optimal",
-                  },
-                  {
-                    label: "Sensor Aktif",
-                    value: "12/12",
-                    icon: Activity,
-                    color: "bg-purple-500",
-                    status: "Online",
-                  },
-                ].map((metric) => (
-                  <div
-                    key={metric.label}
-                    className="rounded-xl border border-slate-200 bg-white p-5"
-                  >
-                    <div
-                      className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${metric.color}`}
-                    >
-                      <metric.icon className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="mb-1 text-sm text-slate-600">
-                      {metric.label}
-                    </div>
-                    <div className="mb-1 text-2xl text-[#001B34]">
-                      {metric.value}
-                    </div>
-                    <div className="text-sm text-green-600">{metric.status}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
-                <div className="mb-6 flex items-center justify-between">
-                  <h3 className="text-lg text-[#001B34]">Tren Sensor 24 Jam</h3>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50"
-                    >
-                      <Download className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50"
-                    >
-                      <Filter className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-                <ResponsiveContainer width="100%" height={350}>
-                  <LineChart data={sensorData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="time" stroke="#64748b" />
-                    <YAxis stroke="#64748b" />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="temp"
-                      stroke="#f97316"
-                      strokeWidth={2}
-                      name="Suhu (°C)"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="humidity"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
-                      name="Kelembaban (%)"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="ammonia"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      name="Amonia (ppm)"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
 
           {activeTab === "daily" && (
             <div className="space-y-6">
