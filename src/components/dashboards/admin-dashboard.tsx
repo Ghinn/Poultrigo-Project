@@ -41,26 +41,17 @@ import { useToast } from "@/components/ui/toast-provider";
 
 type ModalMode = "create" | "edit" | "view" | null;
 
-interface UserManagement {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  created_at?: Date | string;
-  last_login?: Date | string;
-}
-
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<
     "overview" | "users" | "orders" | "news" | "sensors" | "system" | "logs"
   >("overview");
 
   // User management state
-  const [users, setUsers] = useState<UserManagement[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "operator" | "guest">("all");
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [selectedUser, setSelectedUser] = useState<UserManagement | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -100,32 +91,13 @@ export function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderSearchQuery, setOrderSearchQuery] = useState("");
 
-  // Load data functions
-  const loadUsers = async () => {
-    const allUsers = await getUsers();
-    // Map users to include password (required by User type) - we'll use empty string since we don't expose passwords
-    const mappedUsers: User[] = allUsers.map((u: any) => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      password: '', // Password is not exposed from getUsers for security
-      role: u.role as "guest" | "operator" | "admin",
-      createdAt: u.createdAt || u.created_at?.toISOString() || new Date().toISOString(),
-      last_login: u.last_login
-    }));
-    setUsers(mappedUsers);
-  };
-
-  const loadOrders = async () => {
-    const allOrders = await getAllOrders();
-    setOrders(allOrders);
-  };
-
   // Load data
   useEffect(() => {
     const loadData = async () => {
-      await loadUsers();
-      await loadOrders();
+      const allUsers = await getUsers();
+      setUsers(allUsers);
+      const allOrders = await getAllOrders();
+      setOrders(allOrders);
     };
     void loadData();
   }, []);
@@ -145,18 +117,17 @@ export function AdminDashboard() {
     order.customer.name.toLowerCase().includes(orderSearchQuery.toLowerCase())
   );
 
-  const handleUpdateOrderStatus = (orderId: string, status: string) => {
+  const handleUpdateOrderStatus = (orderId: number, status: string) => {
     setConfirmModal({
       isOpen: true,
       title: "Konfirmasi Update Status",
       message: `Apakah Anda yakin ingin mengubah status pesanan menjadi ${status}?`,
       onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, isLoading: true }));
-        const res = await updateOrderStatus(orderId, status);
+        const res = await updateOrderStatus(orderId.toString(), status);
         if (res?.success) {
           showToast("Status pesanan berhasil diperbarui", "success");
-          const allOrders = await getAllOrders();
-          setOrders(allOrders);
+          loadOrders();
         } else {
           showToast("Gagal memperbarui status pesanan", "error");
         }
@@ -171,7 +142,7 @@ export function AdminDashboard() {
     {
       label: "Total Pengguna",
       value: users.length.toString(),
-      change: `+${users.filter((u) => u.created_at && new Date(u.created_at).getTime() > oneDayAgo).length}`,
+      change: `+${users.filter((u) => new Date(u.createdAt).getTime() > oneDayAgo).length}`,
       icon: Users,
       color: "text-orange-500",
       bgColor: "bg-orange-500",
@@ -215,19 +186,19 @@ export function AdminDashboard() {
     setError("");
   };
 
-  const handleOpenEdit = (user: UserManagement) => {
+  const handleOpenEdit = (user: User) => {
     setFormData({
       name: user.name,
       email: user.email,
       password: "",
-      role: user.role as "guest" | "operator" | "admin",
+      role: user.role,
     });
     setSelectedUser(user);
     setModalMode("edit");
     setError("");
   };
 
-  const handleOpenView = (user: UserManagement) => {
+  const handleOpenView = (user: User) => {
     setSelectedUser(user);
     setModalMode("view");
   };
@@ -283,8 +254,7 @@ export function AdminDashboard() {
       return;
     }
 
-    const allUsers = await getUsers();
-    setUsers(allUsers);
+    loadUsers();
     handleCloseModal();
     showToast(modalMode === "create" ? "Pengguna berhasil dibuat" : "Pengguna berhasil diperbarui", "success");
   };
@@ -299,8 +269,7 @@ export function AdminDashboard() {
         const res = await deleteUser(userId);
         if (res?.success) {
           showToast("Pengguna berhasil dihapus", "success");
-          const allUsers = await getUsers();
-          setUsers(allUsers);
+          loadUsers();
           if (selectedUser?.id === userId) {
             handleCloseModal();
           }
@@ -394,11 +363,11 @@ export function AdminDashboard() {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <Image
-                  src="/Logo/Logo Poultrigo_Logomark.svg"
+                  src="/Logo/Logo Poultrigo_Navy_Primary.svg"
                   alt="Poultrigo"
-                  width={40}
-                  height={40}
-                  className="h-10 w-10"
+                  width={140}
+                  height={48}
+                  className="h-10 w-auto"
                 />
                 <div>
                   <div className="font-semibold text-white">Poultrigo</div>
@@ -725,7 +694,7 @@ export function AdminDashboard() {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-600">
-                              {user.last_login ? formatDate(typeof user.last_login === 'string' ? user.last_login : user.last_login.toISOString()) : "N/A"}
+                              {formatDate(user.last_login || "")}
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2">
@@ -823,7 +792,7 @@ export function AdminDashboard() {
                               {order.products}
                             </td>
                             <td className="px-6 py-4 text-sm font-medium text-[#001B34]">
-                              Rp {order.total.toLocaleString('id-ID')}
+                              Rp {parseFloat(order.total).toLocaleString('id-ID')}
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-600">
                               {order.date}
@@ -1168,7 +1137,7 @@ export function AdminDashboard() {
                         Terakhir Login
                       </label>
                       <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-900">
-                        {selectedUser?.last_login ? formatDate(typeof selectedUser.last_login === 'string' ? selectedUser.last_login : selectedUser.last_login.toISOString()) : "Belum pernah login"}
+                        {formatDate(selectedUser?.last_login || "")}
                       </div>
                     </div>
                     <div>
@@ -1176,7 +1145,7 @@ export function AdminDashboard() {
                         Tanggal Dibuat
                       </label>
                       <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-900">
-                        {selectedUser?.created_at ? new Date(selectedUser.created_at).toLocaleDateString("id-ID") : "N/A"}
+                        {new Date(selectedUser?.createdAt || "").toLocaleDateString("id-ID")}
                       </div>
                     </div>
                   </>

@@ -493,11 +493,11 @@ export function OperatorDashboard() {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <Image
-                  src="/Logo/Logo Poultrigo_Logomark.svg"
+                  src="/Logo/Logo Poultrigo_Navy_Primary.svg"
                   alt="Poultrigo"
-                  width={40}
-                  height={40}
-                  className="h-10 w-10"
+                  width={140}
+                  height={48}
+                  className="h-10 w-auto"
                 />
                 <div>
                   <div className="font-semibold text-white">Poultrigo</div>

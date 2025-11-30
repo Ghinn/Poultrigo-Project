@@ -68,7 +68,7 @@ interface CartItem {
   name: string;
   price: number;
   stock: number;
-  image_url?: string;
+  image_url: string;
 }
 
 interface Cart {
@@ -278,11 +278,11 @@ export function GuestDashboard({
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <Image
-                  src="/Logo/Logo Poultrigo_Logomark.svg"
+                  src="/Logo/Logo Poultrigo_Navy_Primary.svg"
                   alt="Poultrigo"
-                  width={40}
-                  height={40}
-                  className="h-10 w-10"
+                  width={140}
+                  height={48}
+                  className="h-10 w-auto"
                 />
                 <div>
                   <div className="font-semibold text-white">Poultrigo</div>
@@ -623,9 +623,9 @@ export function GuestDashboard({
                             <h4 className="mb-2 text-[#001B34]">{product.name}</h4>
                             <p className="mb-3 text-xs text-slate-500 line-clamp-2">{product.description}</p>
                             <div className="mb-4 flex items-center justify-between text-sm text-slate-600">
-                              <span>Stok: {product.stock.toString()}</span>
+                              <span>Stok: {product.stock}</span>
                               <span className="font-semibold text-orange-600">
-                                Rp {product.price.toLocaleString('id-ID')}
+                                Rp {parseFloat(product.price).toLocaleString()}
                               </span>
                             </div>
                             <button
