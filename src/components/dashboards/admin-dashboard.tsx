@@ -92,14 +92,21 @@ export function AdminDashboard() {
   const [orderSearchQuery, setOrderSearchQuery] = useState("");
 
   // Load data
+  // Load data functions
+  const loadUsers = async () => {
+    const allUsers = await getUsers();
+    setUsers(allUsers);
+  };
+
+  const loadOrders = async () => {
+    const allOrders = await getAllOrders();
+    setOrders(allOrders);
+  };
+
+  // Initial load
   useEffect(() => {
-    const loadData = async () => {
-      const allUsers = await getUsers();
-      setUsers(allUsers);
-      const allOrders = await getAllOrders();
-      setOrders(allOrders);
-    };
-    void loadData();
+    void loadUsers();
+    void loadOrders();
   }, []);
 
   // Filter users
