@@ -625,7 +625,7 @@ export function GuestDashboard({
                             <div className="mb-4 flex items-center justify-between text-sm text-slate-600">
                               <span>Stok: {product.stock}</span>
                               <span className="font-semibold text-orange-600">
-                                Rp {parseFloat(product.price).toLocaleString()}
+                                Rp {product.price.toLocaleString()}
                               </span>
                             </div>
                             <button
@@ -678,7 +678,7 @@ export function GuestDashboard({
                             <div className="flex justify-between">
                               <div>
                                 <h3 className="font-bold text-slate-900">{item.name}</h3>
-                                <div className="text-sm text-slate-500">Rp {parseFloat(item.price.toString()).toLocaleString()}</div>
+                                <div className="text-sm text-slate-500">Rp {item.price.toLocaleString()}</div>
                               </div>
                               <button onClick={() => handleRemoveFromCart(item.id)} className="text-slate-400 hover:text-red-500">
                                 <Trash className="h-5 w-5" />
@@ -714,11 +714,11 @@ export function GuestDashboard({
                       <div className="mb-6 space-y-2 border-b border-slate-100 pb-6">
                         <div className="flex justify-between text-slate-500">
                           <span>Subtotal</span>
-                          <span>Rp {parseFloat(initialCart.total.toString()).toLocaleString()}</span>
+                          <span>Rp {initialCart.total.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between font-bold text-slate-900">
                           <span>Total</span>
-                          <span>Rp {parseFloat(initialCart.total.toString()).toLocaleString()}</span>
+                          <span>Rp {initialCart.total.toLocaleString()}</span>
                         </div>
                       </div>
 
