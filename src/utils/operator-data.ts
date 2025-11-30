@@ -231,4 +231,120 @@ export function getDailyRecordById(recordId: string): DailyRecord | undefined {
   return records.find((r) => r.id === recordId);
 }
 
+// Device/Robot CRUD
+export interface Device {
+  id: string;
+  name: string;
+  type: "Feeder" | "Waterer" | "Cleaner" | "Sensor";
+  status: "Active" | "Inactive" | "Maintenance";
+  kandangId: string;
+  batteryLevel: number;
+  lastActive: string;
+}
+
+const DEVICE_STORAGE_KEY = "poultrigo_devices";
+
+export function getDevices(): Device[] {
+  if (typeof window === "undefined") return [];
+  const data = localStorage.getItem(DEVICE_STORAGE_KEY);
+  if (!data) {
+    // Default mock data
+    const defaultDevices: Device[] = [
+      {
+        id: "DEV001",
+        name: "Robot Pakan A1",
+        type: "Feeder",
+        status: "Active",
+        kandangId: "A1",
+        batteryLevel: 85,
+        lastActive: new Date().toISOString(),
+      },
+      {
+        id: "DEV002",
+        name: "Sensor Suhu A1",
+        type: "Sensor",
+        status: "Active",
+        kandangId: "A1",
+        batteryLevel: 92,
+        lastActive: new Date().toISOString(),
+      },
+    ];
+    localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify(defaultDevices));
+    return defaultDevices;
+  }
+  return JSON.parse(data);
+}
+
+export function saveDevice(device: Omit<Device, "id">): Device {
+  const devices = getDevices();
+  const newDevice: Device = {
+    ...device,
+    id: `DEV${Date.now()}`,
+  };
+  devices.push(newDevice);
+  localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify(devices));
+  return newDevice;
+}
+
+export function updateDevice(deviceId: string, updates: Partial<Device>): Device | null {
+  if (typeof window === "undefined") return null;
+  const devices = getDevices();
+  const index = devices.findIndex((d) => d.id === deviceId);
+
+  if (index === -1) return null;
+
+  const updatedDevice = { ...devices[index], ...updates };
+  devices[index] = updatedDevice;
+  localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify(devices));
+  return updatedDevice;
+}
+
+export function deleteDevice(deviceId: string): boolean {
+  if (typeof window === "undefined") return false;
+  const devices = getDevices();
+  const filtered = devices.filter((d) => d.id !== deviceId);
+
+  if (filtered.length === devices.length) return false;
+
+  localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify(filtered));
+  return true;
+}
+
+// Prediction CRUD
+export interface PredictionRecord {
+  id: string;
+  date: string;
+  kandangId: string;
+  kandangName: string;
+  inputs: {
+    age: number;
+    gender: "Jantan" | "Betina";
+    population: number;
+    feedYesterday: number;
+    leftover: number;
+  };
+  result: number;
+  createdAt: string;
+}
+
+const PREDICTION_STORAGE_KEY = "poultrigo_predictions";
+
+export function getPredictions(): PredictionRecord[] {
+  if (typeof window === "undefined") return [];
+  const data = localStorage.getItem(PREDICTION_STORAGE_KEY);
+  return data ? JSON.parse(data) : [];
+}
+
+export function savePrediction(prediction: Omit<PredictionRecord, "id" | "createdAt">): PredictionRecord {
+  const predictions = getPredictions();
+  const newPrediction: PredictionRecord = {
+    ...prediction,
+    id: `PRED${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+  predictions.unshift(newPrediction); // Add to beginning
+  localStorage.setItem(PREDICTION_STORAGE_KEY, JSON.stringify(predictions));
+  return newPrediction;
+}
+
 

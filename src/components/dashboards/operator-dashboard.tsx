@@ -29,6 +29,13 @@ import {
   Save,
   Menu,
   Newspaper,
+  Cpu,
+  Power,
+  Battery,
+  Wifi,
+  Calculator,
+  Printer,
+  FileText,
 } from "lucide-react";
 
 import {
@@ -58,17 +65,25 @@ import {
   type Kandang,
   type DailyRecord,
   type KandangHistory,
+  getDevices,
+  saveDevice,
+  updateDevice,
+  deleteDevice,
+  type Device,
+  getPredictions,
+  savePrediction,
+  type PredictionRecord,
 } from "@/utils/operator-data";
 import { logout } from "@/actions/auth";
 import { setCurrentUser } from "@/utils/auth";
 
-type ModalMode = "create-kandang" | "edit-kandang" | "view-kandang" | "create-daily" | "edit-daily" | null;
+type ModalMode = "create-kandang" | "edit-kandang" | "view-kandang" | "create-daily" | "edit-daily" | "create-device" | null;
 
 export function OperatorDashboard() {
   const router = useRouter();
   const isClient = useIsClient();
   const [activeTab, setActiveTab] = useState<
-    "overview" | "kandang" | "monitoring" | "daily" | "reports" | "news"
+    "overview" | "kandang" | "monitoring" | "daily" | "reports" | "news" | "devices" | "prediction"
   >("overview");
 
   // CRUD State for Kandang
@@ -108,6 +123,13 @@ export function OperatorDashboard() {
   });
 
   // History State
+  const loadHistoryAndPredictions = useCallback(() => {
+    if (isClient) {
+      setHistory(getKandangHistory());
+      setPredictions(getPredictions());
+    }
+  }, [isClient]);
+
   const [history, setHistory] = useState<KandangHistory[]>(() => {
     if (typeof window !== "undefined") {
       return getKandangHistory();
@@ -115,222 +137,53 @@ export function OperatorDashboard() {
     return [];
   });
 
+  // Device State
+  const loadDevices = useCallback(() => {
+    if (isClient) {
+      setDevices(getDevices());
+    }
+  }, [isClient]);
+
+  const handleDeleteDevice = (deviceId: string) => {
+    if (confirm("Hapus perangkat ini?")) {
+      deleteDevice(deviceId);
+      loadDevices();
+    }
+  };
+
+  const [devices, setDevices] = useState<Device[]>(() => {
+    if (typeof window !== "undefined") {
+      return getDevices();
+    }
+    return [];
+  });
+  const [deviceFormData, setDeviceFormData] = useState({
+    name: "",
+    type: "Feeder" as "Feeder" | "Waterer" | "Cleaner" | "Sensor",
+    kandangId: "",
+  });
+
+  // Prediction State
+  const [predictions, setPredictions] = useState<PredictionRecord[]>(() => {
+    if (typeof window !== "undefined") {
+      return getPredictions();
+    }
+    return [];
+  });
+  const [predictionForm, setPredictionForm] = useState({
+    kandangId: "",
+    age: 0,
+    gender: "Jantan" as "Jantan" | "Betina",
+    population: 0,
+    feedYesterday: 0,
+    leftover: 0,
+  });
+  const [predictionResult, setPredictionResult] = useState<number | null>(null);
+
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [error, setError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Load functions for manual refresh
-  const loadKandangs = useCallback(() => {
-    if (isClient) {
-      setKandangs(getKandangs());
-    }
-  }, [isClient]);
-
-  const loadDailyRecords = useCallback(() => {
-    if (isClient) {
-      setDailyRecords(getDailyRecords());
-    }
-  }, [isClient]);
-
-  const loadHistory = useCallback(() => {
-    if (isClient) {
-      setHistory(getKandangHistory());
-    }
-  }, [isClient]);
-
-  // Reload history when tab changes to reports
-  useEffect(() => {
-    if (activeTab === "reports") {
-      loadHistory();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
-
-  const sensorData = [
-    { time: "00:00", temp: 27, humidity: 68, ammonia: 15 },
-    { time: "04:00", temp: 26, humidity: 70, ammonia: 18 },
-    { time: "08:00", temp: 28, humidity: 65, ammonia: 20 },
-    { time: "12:00", temp: 30, humidity: 62, ammonia: 22 },
-    { time: "16:00", temp: 29, humidity: 64, ammonia: 19 },
-    { time: "20:00", temp: 28, humidity: 67, ammonia: 17 },
-  ];
-
-  // Filter daily records by selected date
-  const filteredDailyRecords = dailyRecords.filter((r) => r.date === selectedDate);
-
-  const alerts = [
-    {
-      id: 1,
-      type: "warning",
-      kandang: "Kandang A2",
-      message: "Suhu di atas normal (31°C)",
-      time: "5 menit lalu",
-    },
-    {
-      id: 2,
-      type: "info",
-      kandang: "Kandang B1",
-      message: "Waktu pemberian pakan akan segera tiba",
-      time: "15 menit lalu",
-    },
-    {
-      id: 3,
-      type: "warning",
-      kandang: "Kandang A2",
-      message: "Kelembaban tinggi (70%)",
-      time: "30 menit lalu",
-    },
-  ];
-
-
-  // CRUD Functions for Kandang
-  const handleOpenCreateKandang = () => {
-    setKandangFormData({
-      name: "",
-      population: 0,
-      age: 0,
-      status: "Optimal",
-    });
-    setSelectedKandang(null);
-    setModalMode("create-kandang");
-    setError("");
-  };
-
-  const handleOpenEditKandang = (kandang: Kandang) => {
-    setKandangFormData({
-      name: kandang.name,
-      population: kandang.population,
-      age: kandang.age,
-      status: kandang.status,
-    });
-    setSelectedKandang(kandang);
-    setModalMode("edit-kandang");
-    setError("");
-  };
-
-  const handleOpenViewKandang = (kandang: Kandang) => {
-    setSelectedKandang(kandang);
-    setModalMode("view-kandang");
-  };
-
-  const handleSaveKandang = () => {
-    setError("");
-
-    if (!kandangFormData.name.trim()) {
-      setError("Nama kandang wajib diisi");
-      return;
-    }
-    if (kandangFormData.population <= 0) {
-      setError("Populasi harus lebih dari 0");
-      return;
-    }
-    if (kandangFormData.age < 0) {
-      setError("Usia tidak boleh negatif");
-      return;
-    }
-
-    if (modalMode === "create-kandang") {
-      saveKandang(kandangFormData);
-    } else if (modalMode === "edit-kandang" && selectedKandang) {
-      updateKandang(selectedKandang.id, kandangFormData);
-    }
-
-    loadKandangs();
-    loadHistory(); // Refresh history
-    setModalMode(null);
-    setSelectedKandang(null);
-  };
-
-  const handleDeleteKandang = (kandangId: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus kandang ini?")) {
-      deleteKandang(kandangId);
-      loadKandangs();
-      if (selectedKandang?.id === kandangId) {
-        setModalMode(null);
-        setSelectedKandang(null);
-      }
-    }
-  };
-
-  // CRUD Functions for Daily Records
-  const handleOpenCreateDaily = () => {
-    // Get current time in HH:MM format
-    const now = new Date();
-    const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-
-    setRecordFormData({
-      date: selectedDate,
-      kandangId: "",
-      kandangName: "",
-      task: "",
-      time: currentTime, // Auto-fill with current system time
-      status: "Menunggu",
-      notes: "",
-    });
-    setSelectedRecord(null);
-    setModalMode("create-daily");
-    setError("");
-  };
-
-  const handleOpenEditDaily = (record: DailyRecord) => {
-    setRecordFormData({
-      date: record.date,
-      kandangId: record.kandangId,
-      kandangName: record.kandangName,
-      task: record.task,
-      time: record.time,
-      status: record.status,
-      notes: record.notes || "",
-    });
-    setSelectedRecord(record);
-    setModalMode("edit-daily");
-    setError("");
-  };
-
-  const handleSaveDailyRecord = () => {
-    setError("");
-
-    if (!recordFormData.task.trim()) {
-      setError("Nama tugas wajib diisi");
-      return;
-    }
-    if (!recordFormData.kandangId) {
-      setError("Pilih kandang");
-      return;
-    }
-    if (!recordFormData.time.trim()) {
-      setError("Waktu wajib diisi");
-      return;
-    }
-
-    if (modalMode === "create-daily") {
-      saveDailyRecord(recordFormData);
-    } else if (modalMode === "edit-daily" && selectedRecord) {
-      updateDailyRecord(selectedRecord.id, recordFormData);
-    }
-
-    loadDailyRecords();
-    setModalMode(null);
-    setSelectedRecord(null);
-  };
-
-  const handleDeleteDailyRecord = (recordId: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus catatan ini?")) {
-      deleteDailyRecord(recordId);
-      loadDailyRecords();
-      if (selectedRecord?.id === recordId) {
-        setModalMode(null);
-        setSelectedRecord(null);
-      }
-    }
-  };
-
-  const handleCloseModal = () => {
-    setModalMode(null);
-    setSelectedKandang(null);
-    setSelectedRecord(null);
-    setError("");
-  };
 
   if (!isClient) {
     return (
@@ -390,6 +243,8 @@ export function OperatorDashboard() {
               { id: "monitoring", label: "Monitoring Sensor", icon: Activity },
               { id: "daily", label: "Data Harian", icon: Calendar },
               { id: "reports", label: "Laporan", icon: BarChart3 },
+              { id: "devices", label: "Perangkat", icon: Cpu },
+              { id: "prediction", label: "Prediksi Pakan", icon: Calculator },
               { id: "news", label: "Berita", icon: Newspaper, route: "/news" },
             ].map((tab) => (
               <button
@@ -1409,10 +1264,88 @@ export function OperatorDashboard() {
             </div>
           </div>
         )}
+        {/* Create Device Modal */}
+        {modalMode === "create-device" && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-xl bg-white p-6">
+              <h3 className="mb-4 text-lg font-semibold text-[#001B34]">
+                Tambah Perangkat Baru
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">
+                    Nama Perangkat
+                  </label>
+                  <input
+                    type="text"
+                    value={deviceFormData.name}
+                    onChange={(e) =>
+                      setDeviceFormData({ ...deviceFormData, name: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none"
+                    placeholder="Contoh: Robot Pakan A1"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">
+                    Tipe Perangkat
+                  </label>
+                  <select
+                    value={deviceFormData.type}
+                    onChange={(e) =>
+                      setDeviceFormData({
+                        ...deviceFormData,
+                        type: e.target.value as any,
+                      })
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none"
+                  >
+                    <option value="Feeder">Feeder (Pakan)</option>
+                    <option value="Waterer">Waterer (Minum)</option>
+                    <option value="Cleaner">Cleaner (Pembersih)</option>
+                    <option value="Sensor">Sensor</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">
+                    Lokasi Kandang
+                  </label>
+                  <select
+                    value={deviceFormData.kandangId}
+                    onChange={(e) =>
+                      setDeviceFormData({ ...deviceFormData, kandangId: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none"
+                  >
+                    {kandangs.map((k) => (
+                      <option key={k.id} value={k.id}>
+                        {k.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {error && <p className="text-sm text-red-500">{error}</p>}
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    onClick={handleCloseModal}
+                    className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleSaveDevice}
+                    className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
+                  >
+                    Simpan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div >
   );
 }
 
 export default OperatorDashboard;
-
