@@ -394,7 +394,7 @@ export function AdminDashboard() {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <Image
-                  src="/logo/Logo Poultrigo_Logomark.svg"
+                  src="/Logo/Logo Poultrigo_Logomark.svg"
                   alt="Poultrigo"
                   width={40}
                   height={40}
@@ -823,7 +823,7 @@ export function AdminDashboard() {
                               {order.products}
                             </td>
                             <td className="px-6 py-4 text-sm font-medium text-[#001B34]">
-                                Rp {order.total.toLocaleString('id-ID')}
+                              Rp {order.total.toLocaleString('id-ID')}
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-600">
                               {order.date}

@@ -278,7 +278,7 @@ export function GuestDashboard({
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <Image
-                  src="/logo/Logo Poultrigo_Logomark.svg"
+                  src="/Logo/Logo Poultrigo_Logomark.svg"
                   alt="Poultrigo"
                   width={40}
                   height={40}

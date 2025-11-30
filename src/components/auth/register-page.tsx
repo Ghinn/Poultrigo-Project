@@ -99,7 +99,7 @@ export function RegisterPage() {
           <div className="hidden space-y-6 text-white lg:block">
             <div className="mb-8">
               <Image
-                src="/logo/Logo Poultrigo_Tagline.svg"
+                src="/Logo/Logo Poultrigo_Tagline.svg"
                 alt="Poultrigo - Predict, Feed, Grow"
                 width={280}
                 height={120}

@@ -164,15 +164,15 @@ const roleCards = [
 const partnerLogos = [
   {
     name: "PT. Japfa",
-    logo: "/logo/Japfa_logo.svg",
+    logo: "/Logo/Japfa_logo.svg",
   },
   {
     name: "Tekom",
-    logo: "/logo/Logo TEKOM.png",
+    logo: "/Logo/Logo TEKOM.png",
   },
   {
     name: "Sekolah Vokasi",
-    logo: "/logo/Logo Sekolah Vokasi.png",
+    logo: "/Logo/Logo Sekolah Vokasi.png",
   },
 ];
 
@@ -219,7 +219,7 @@ export function LandingPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center">
             <Image
-              src="/logo/Logo Poultrigo_Primary.svg"
+              src="/Logo/Logo Poultrigo_Primary.svg"
               alt="Poultrigo"
               width={160}
               height={64}
@@ -326,7 +326,7 @@ export function LandingPage() {
               {/* Logo with Tagline */}
               <div className="mb-4 sm:mb-6">
                 <Image
-                  src="/logo/Logo Poultrigo_Tagline.svg"
+                  src="/Logo/Logo Poultrigo_Tagline.svg"
                   alt="Poultrigo - Predict, Feed, Grow"
                   width={280}
                   height={120}
@@ -810,7 +810,7 @@ export function LandingPage() {
                 <div className="relative mb-4 flex justify-center">
                   <div className="relative aspect-square h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
                     <ImageWithFallback
-                      src="/team/Ghina Rania.png"
+                      src="/Team/Ghina Rania.png"
                       alt="Ghina Rania"
                       className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
                       style={{ objectFit: 'cover', objectPosition: 'center' }}
@@ -858,7 +858,7 @@ export function LandingPage() {
                 <div className="relative mb-4 flex justify-center">
                   <div className="relative aspect-square h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
                     <ImageWithFallback
-                      src="/team/Fatimah Az-Zahidah.png"
+                      src="/Team/Fatimah Az-Zahidah.png"
                       alt="Fatimah Azzahidah"
                       className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
                       style={{ objectFit: 'cover', objectPosition: 'center' }}
