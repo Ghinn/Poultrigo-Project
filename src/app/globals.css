@@ -1,0 +1,212 @@
+@import "tailwindcss";
+
+:root {
+  --font-size: 16px;
+  --background: #f8f9fa;
+  --foreground: #1a1d29;
+  --card: #ffffff;
+  --card-foreground: #1a1d29;
+  --popover: #ffffff;
+  --popover-foreground: #1a1d29;
+  --primary: #001b34;
+  --primary-foreground: #ffffff;
+  --secondary: #ff6b35;
+  --secondary-foreground: #ffffff;
+  --accent: #e63946;
+  --accent-foreground: #ffffff;
+  --muted: #e9ecef;
+  --muted-foreground: #6c757d;
+  --destructive: #e63946;
+  --destructive-foreground: #ffffff;
+  --border: #dee2e6;
+  --input: transparent;
+  --input-background: #f8f9fa;
+  --switch-background: #adb5bd;
+  --ring: #001b34;
+  --chart-1: #ff6b35;
+  --chart-2: #001b34;
+  --chart-3: #e63946;
+  --chart-4: #4ecdc4;
+  --chart-5: #ffd166;
+  --radius: 0.75rem;
+  --sidebar: #001b34;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ff6b35;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #002847;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #003357;
+  --sidebar-ring: #ff6b35;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0d1117;
+    --foreground: #f8f9fa;
+    --card: #161b22;
+    --card-foreground: #f8f9fa;
+    --popover: #161b22;
+    --popover-foreground: #f8f9fa;
+    --primary: #002847;
+    --secondary: #ff6b35;
+    --muted: #21262d;
+    --muted-foreground: #8b949e;
+    --accent: #e63946;
+    --border: #30363d;
+    --input: #21262d;
+    --ring: #ff6b35;
+    --chart-2: #4ecdc4;
+    --chart-4: #ffd166;
+    --chart-5: #95e1d3;
+    --sidebar: #0d1117;
+    --sidebar-foreground: #f8f9fa;
+    --sidebar-accent: #161b22;
+    --sidebar-border: #21262d;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+}
+
+body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans), "Inter", -apple-system, BlinkMacSystemFont,
+      "Segoe UI", sans-serif;
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+/* Custom Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s ease-out;
+}
+
+.animate-shimmer {
+  animation: shimmer 3s infinite;
+}
+
+.animate-float {
+  animation: float ease-in-out infinite;
+}
