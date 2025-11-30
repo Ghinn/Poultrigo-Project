@@ -124,14 +124,14 @@ export function AdminDashboard() {
     order.customer.name.toLowerCase().includes(orderSearchQuery.toLowerCase())
   );
 
-  const handleUpdateOrderStatus = (orderId: number, status: string) => {
+  const handleUpdateOrderStatus = (orderId: string, status: string) => {
     setConfirmModal({
       isOpen: true,
       title: "Konfirmasi Update Status",
       message: `Apakah Anda yakin ingin mengubah status pesanan menjadi ${status}?`,
       onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, isLoading: true }));
-        const res = await updateOrderStatus(orderId.toString(), status);
+        const res = await updateOrderStatus(orderId, status);
         if (res?.success) {
           showToast("Status pesanan berhasil diperbarui", "success");
           loadOrders();
@@ -799,7 +799,7 @@ export function AdminDashboard() {
                               {order.products}
                             </td>
                             <td className="px-6 py-4 text-sm font-medium text-[#001B34]">
-                              Rp {parseFloat(order.total).toLocaleString('id-ID')}
+                              Rp {order.total.toLocaleString('id-ID')}
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-600">
                               {order.date}
