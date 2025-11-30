@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -15,9 +15,11 @@ import {
   Newspaper,
   Calendar,
   Eye,
+  Tag,
+  ChevronDown,
 } from "lucide-react";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
-import { getPublishedNews, type NewsArticle } from "@/utils/news";
+import { getPublishedNews } from "@/utils/news";
 
 const featureCards = [
   {
@@ -164,16 +166,31 @@ const roleCards = [
 const partnerLogos = [
   {
     name: "PT. Japfa",
-    logo: "/Logo/Japfa_logo.svg",
+    logo: "Logo/Japfa_logo.svg",
   },
   {
     name: "Tekom",
-    logo: "/Logo/Logo TEKOM.png",
+    logo: "Logo/Logo TEKOM.png",
   },
   {
     name: "Sekolah Vokasi",
-    logo: "/Logo/Logo Sekolah Vokasi.png",
+    logo: "Logo/Logo Sekolah Vokasi.png",
   },
+];
+
+const navLinks = [
+  { label: "Fitur", target: "fitur" },
+  { label: "Cara Kerja", target: "cara-kerja" },
+  { label: "Implementasi Robot", target: "robotik" },
+  { label: "Kenapa Kami", target: "kenapa-kami" },
+  { label: "Peran", target: "peran" },
+];
+
+const roboticsHighlights = [
+  "Chick Bot memasok pakan berdasarkan rekomendasi ML secara presisi hingga gram terakhir.",
+  "Sensor load-cell memvalidasi keberhasilan distribusi dan mengirim telemetri ke dashboard Poultrigo.",
+  "Routine cleaning & refill otomatis sehingga operator hanya fokus pada analitik.",
+  "Video animasi & model 3D siap dipresentasikan ke investor maupun mitra teknologi.",
 ];
 
 export function LandingPage() {
@@ -181,14 +198,14 @@ export function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  const [latestNews, setLatestNews] = useState<NewsArticle[]>([]);
+  const [latestNews, setLatestNews] = useState<any[]>([]);
+  const [modelViewerReady, setModelViewerReady] = useState(false);
+  const [authMenuOpen, setAuthMenuOpen] = useState(false);
+  const [mobileAuthOpen, setMobileAuthOpen] = useState(false);
+  const authMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const loadNews = () => {
-      const news = getPublishedNews().slice(0, 3);
-      setLatestNews(news);
-    };
-    loadNews();
+    setLatestNews(getPublishedNews().slice(0, 3));
   }, []);
 
   useEffect(() => {
@@ -199,12 +216,39 @@ export function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (authMenuRef.current && !authMenuRef.current.contains(event.target as Node)) {
+        setAuthMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    import("@google/model-viewer")
+      .then(() => setModelViewerReady(true))
+      .catch(() => setModelViewerReady(false));
+  }, []);
+
+  const closeMenus = () => {
+    setMobileMenuOpen(false);
+    setAuthMenuOpen(false);
+    setMobileAuthOpen(false);
+  };
+
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
-      setMobileMenuOpen(false);
+      closeMenus();
     }
+  };
+
+  const goTo = (path: string) => {
+    closeMenus();
+    router.push(path);
   };
 
   return (
@@ -221,8 +265,8 @@ export function LandingPage() {
             <Image
               src="/Logo/Logo Poultrigo_Primary.svg"
               alt="Poultrigo"
-              width={160}
-              height={64}
+              width={180}
+              height={72}
               className="h-10 w-auto sm:h-12"
               priority
             />
@@ -230,34 +274,54 @@ export function LandingPage() {
 
           {/* Desktop Navigation */}
           <nav className="hidden items-center gap-4 text-sm text-slate-600 md:flex lg:gap-6">
-            {["Fitur", "Cara Kerja", "Kenapa Kami", "Peran"].map((item) => (
+            {navLinks.map((link) => (
               <button
-                key={item}
-                onClick={() => scrollToSection(item.toLowerCase().replace(" ", "-"))}
-                className="transition-colors hover:text-[#001B34]"
+                key={link.label}
+                onClick={() => scrollToSection(link.target)}
+                className="transition-colors hover:text-orange-500"
               >
-                {item}
+                {link.label}
               </button>
             ))}
             <button
-              onClick={() => router.push("/news")}
-              className="transition-colors hover:text-[#001B34]"
+              onClick={() => goTo("/news")}
+              className="transition-colors hover:text-orange-500"
             >
               Berita
             </button>
-            <button
-              onClick={() => router.push("/login")}
-              className="transition-colors hover:text-[#001B34]"
-            >
-              Masuk
-            </button>
-            <button
-              onClick={() => router.push("/register")}
-              className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
-            >
-              Daftar
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
+            <div className="relative" ref={authMenuRef}>
+              <button
+                type="button"
+                onClick={() => setAuthMenuOpen((prev) => !prev)}
+                className="flex items-center gap-1 rounded-full border border-slate-200 px-4 py-2 font-medium text-[#001B34] transition-colors hover:border-orange-400 hover:text-orange-500"
+                aria-expanded={authMenuOpen}
+              >
+                Akses Akun
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${authMenuOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {authMenuOpen && (
+                <div className="absolute right-0 z-50 mt-3 w-48 rounded-2xl border border-slate-200 bg-white p-3 text-sm shadow-xl">
+                  <button
+                    type="button"
+                    onClick={() => goTo("/login")}
+                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-[#001B34] transition-colors hover:bg-slate-50 hover:text-orange-500"
+                  >
+                    Masuk
+                    <ArrowRight className="h-3.5 w-3.5 text-orange-500" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => goTo("/register")}
+                    className="mt-2 flex w-full items-center justify-between rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-3 py-2 text-left font-semibold text-white shadow-md transition-all hover:shadow-lg"
+                  >
+                    Daftar
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -278,37 +342,52 @@ export function LandingPage() {
         {mobileMenuOpen && (
           <nav className="border-t border-slate-200 bg-white px-4 py-4 md:hidden">
             <div className="space-y-2">
-              {["Fitur", "Cara Kerja", "Kenapa Kami", "Peran"].map((item) => (
+              {navLinks.map((link) => (
                 <button
-                  key={item}
-                  onClick={() => scrollToSection(item.toLowerCase().replace(" ", "-"))}
-                  className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#001B34]"
+                  key={link.label}
+                  onClick={() => scrollToSection(link.target)}
+                  className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-orange-500"
                 >
-                  {item}
+                  {link.label}
                 </button>
               ))}
               <button
-                onClick={() => {
-                  router.push("/news");
-                  setMobileMenuOpen(false);
-                }}
-                className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#001B34]"
+                onClick={() => goTo("/news")}
+                className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-orange-500"
               >
                 Berita
               </button>
-              <button
-                onClick={() => router.push("/login")}
-                className="block w-full rounded-lg px-4 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#001B34]"
-              >
-                Masuk
-              </button>
-              <button
-                onClick={() => router.push("/register")}
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-medium text-white shadow-md"
-              >
-                Daftar
-                <ArrowRight className="h-4 w-4" />
-              </button>
+              <div className="rounded-lg border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setMobileAuthOpen((prev) => !prev)}
+                  className="flex w-full items-center justify-between rounded-lg px-4 py-2 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-orange-500"
+                  aria-expanded={mobileAuthOpen}
+                >
+                  Akses Akun
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${mobileAuthOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {mobileAuthOpen && (
+                  <div className="space-y-2 px-4 pb-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => goTo("/login")}
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-orange-500"
+                    >
+                      Masuk
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => goTo("/register")}
+                      className="block w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-3 py-2 text-left text-sm font-semibold text-white shadow-md"
+                    >
+                      Daftar
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </nav>
         )}
@@ -324,10 +403,10 @@ export function LandingPage() {
           <div className="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-2 lg:gap-10">
             <div className="space-y-4 sm:space-y-5 lg:space-y-6 animate-fade-in-up">
               {/* Logo with Tagline */}
-              <div className="mb-4 sm:mb-6">
+              <div className="mb-4 sm:mb-6 flex flex-col gap-2">
                 <Image
                   src="/Logo/Logo Poultrigo_Tagline.svg"
-                  alt="Poultrigo - Predict, Feed, Grow"
+                  alt="Poultrigo Tagline"
                   width={280}
                   height={120}
                   className="h-auto w-56 sm:w-64 lg:w-72"
@@ -368,24 +447,22 @@ export function LandingPage() {
             <div className="relative animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
               {/* Decorative gradient overlay */}
               <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-orange-500/20 via-blue-500/20 to-purple-500/20 blur-2xl opacity-50 animate-pulse" style={{ animationDuration: "3s" }} />
-
-
+              
               {/* Main image container with enhanced styling */}
               <div className="relative overflow-hidden rounded-3xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-white/5 p-2 shadow-2xl backdrop-blur-md transition-all duration-500 hover:scale-[1.02] hover:border-white/30 hover:shadow-orange-500/20 sm:rounded-[2rem] sm:p-3">
                 {/* Animated shimmer effect */}
                 <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-
+                
                 <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl">
                   <ImageWithFallback
                     src="https://images.unsplash.com/photo-1697545698404-46828377ae9d?auto=format&fit=crop&w=1400&q=90"
                     alt="Peternakan modern dengan teknologi IoT"
                     className="h-[400px] w-full object-cover transition-transform duration-700 hover:scale-110 sm:h-[500px] lg:h-[600px]"
                   />
-
+                  
                   {/* Gradient overlay untuk depth */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#001B34]/40 via-transparent to-transparent" />
-
+                  
                   {/* Floating particles effect */}
                   <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute top-1/4 left-1/4 h-2 w-2 rounded-full bg-orange-400/60 animate-float" style={{ animationDelay: "0s", animationDuration: "3s" }} />
@@ -522,6 +599,110 @@ export function LandingPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Robotics Implementation */}
+        <section
+          id="robotik"
+          className="bg-gradient-to-br from-[#010f1f] via-[#021a30] to-[#010f1f] px-4 py-12 text-white sm:px-6 sm:py-16"
+        >
+          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2 lg:gap-12">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-orange-300 sm:text-sm">
+                <span className="h-0.5 w-8 bg-orange-400"></span>
+                Implementasi Robotik Chick Bot
+              </div>
+              <h3 className="text-2xl font-semibold text-white sm:text-3xl">
+                Robot feeder otomatis siap mendemonstrasikan alur pemberian pakan cerdas
+              </h3>
+              <p className="text-sm text-white/80 sm:text-base">
+                Panel ini menampilkan integrasi video proses robotik serta model 3D yang sama
+                dengan unit fisik di lapangan. Gunakan aset berikut untuk presentasi, demo investor,
+                atau uji coba langsung di kandang percontohan.
+              </p>
+              <ul className="space-y-2 text-sm text-white/80">
+                {roboticsHighlights.map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <Check className="mt-1 h-4 w-4 flex-shrink-0 text-green-300" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-wrap gap-3 pt-2 sm:gap-4">
+                <a
+                  href="/3d/CHICKEN FEEDING PLACE.f3d"
+                  download
+                  className="rounded-xl border border-white/30 px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:border-orange-400 hover:bg-white/10 sm:px-5 sm:py-2.5"
+                >
+                  Unduh Model .f3d
+                </a>
+                <a
+                  href="/3d/CHICKEN FEEDING PLACE.glb"
+                  download
+                  className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-orange-400 sm:px-5 sm:py-2.5"
+                >
+                  Unduh Model .glb
+                </a>
+              </div>
+              <p className="text-xs text-white/60 sm:text-sm">
+                Format .f3d cocok untuk CAD internal, sementara .glb digunakan untuk viewer 3D web ini.
+              </p>
+            </div>
+            <div className="space-y-6">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur">
+                <div className="overflow-hidden rounded-2xl">
+                  <video
+                    controls
+                    playsInline
+                    poster="/Logo/Logo Poultrigo_Navy_Primary.svg"
+                    className="h-60 w-full rounded-2xl object-cover sm:h-72"
+                    src="/Video/Animasi Robotik Chick Bot.mp4"
+                  >
+                    Browser Anda tidak mendukung video bawaan.
+                  </video>
+                </div>
+                <p className="mt-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/60 sm:text-sm">
+                  <Tag className="h-4 w-4 text-orange-300" />
+                  Animasi Robotik Chick Bot
+                </p>
+              </div>
+              <div className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur">
+                <div className="overflow-hidden rounded-2xl bg-[#031226]">
+                  {modelViewerReady ? (
+                    <model-viewer
+                      src="/3d/CHICKEN FEEDING PLACE.glb"
+                      className="h-[320px] w-full"
+                      ar
+                      ar-modes="webxr scene-viewer quick-look"
+                      auto-rotate
+                      camera-controls
+                      shadow-intensity="1"
+                      exposure="0.9"
+                      interaction-prompt="none"
+                      autoplay
+                    />
+                  ) : (
+                    <div className="flex h-[320px] w-full items-center justify-center text-sm text-white/70">
+                      Menyiapkan pratinjau 3D...
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-white/70">
+                  <div>
+                    <p className="text-base font-semibold text-white">Pratinjau 3D Feeding Place</p>
+                    <p>Tekan drag untuk memutar & zoom.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/register")}
+                    className="rounded-full border border-white/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white transition-all hover:border-orange-400 hover:bg-white/10"
+                  >
+                    Minta Demo
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -667,7 +848,7 @@ export function LandingPage() {
                 className="flex items-center justify-center opacity-90 transition-all hover:scale-110 hover:opacity-100"
                 style={{ animationDelay: `${index * 200}ms` }}
               >
-                <ImageWithFallback
+                <img
                   src={partner.logo}
                   alt={partner.name}
                   width={150}
@@ -697,7 +878,7 @@ export function LandingPage() {
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {latestNews.map((article) => (
+                {latestNews.map((article, idx) => (
                   <article
                     key={article.id}
                     onClick={() => router.push(`/news/${article.id}`)}
@@ -804,40 +985,15 @@ export function LandingPage() {
               </p>
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-3 sm:gap-8">
-              {/* Ghina Rania */}
-              <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all hover:-translate-y-2 hover:shadow-2xl animate-fade-in-up sm:p-8" style={{ animationDelay: "0.2s" }}>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 sm:gap-8">
+              {/* Muhammad Rizki */}
+              <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all hover:-translate-y-2 hover:shadow-2xl animate-fade-in-up sm:p-8" style={{ animationDelay: "0.1s" }}>
                 <div className="relative mb-4 flex justify-center">
-                  <div className="relative aspect-square h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
+                  <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
                     <ImageWithFallback
-                      src="/Team/Ghina Rania.png"
-                      alt="Ghina Rania"
-                      className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
-                      style={{ objectFit: 'cover', objectPosition: 'center' }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent" />
-                  </div>
-                </div>
-                <div className="text-center">
-                  <h4 className="mb-1 text-lg font-bold text-[#001B34] sm:text-xl">Ghina Rania</h4>
-                  <div className="mb-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600 sm:text-sm">
-                    <span className="border-b border-orange-500 px-1 pb-0.5 font-medium text-[#001B34]">Quality Assurance</span>
-                    <span className="border-b border-[#001B34] px-1 pb-0.5 font-medium text-[#001B34]">UI/UX Designer</span>
-                    <span className="border-b border-orange-500 px-1 pb-0.5 font-medium text-[#001B34]">Frontend Developer</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Muhammad Rizki - Project Manager (Center) */}
-              <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all hover:-translate-y-2 hover:shadow-2xl animate-fade-in-up sm:p-8 order-first sm:order-none" style={{ animationDelay: "0.1s" }}>
-                <div className="relative mb-4 flex justify-center">
-                  <div className="relative aspect-square h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
-                    <ImageWithFallback
-                      src="/Team/Muhammad Rizki.jpg"
-
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"
                       alt="Muhammad Rizki"
-                      className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
-                      style={{ objectFit: 'cover', objectPosition: 'center' }}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent" />
                   </div>
@@ -853,15 +1009,36 @@ export function LandingPage() {
                 </div>
               </div>
 
-              {/* Fatimah Azzahidah */}
-              <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all hover:-translate-y-2 hover:shadow-2xl animate-fade-in-up sm:p-8" style={{ animationDelay: "0.3s" }}>
+              {/* Ghina Rania */}
+              <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all hover:-translate-y-2 hover:shadow-2xl animate-fade-in-up sm:p-8" style={{ animationDelay: "0.2s" }}>
                 <div className="relative mb-4 flex justify-center">
-                  <div className="relative aspect-square h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
+                  <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
                     <ImageWithFallback
-                      src="/Team/Fatimah Az-Zahidah.png"
+                      src="/team/Ghina Rania.png"
+                      alt="Ghina Rania"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent" />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <h4 className="mb-1 text-lg font-bold text-[#001B34] sm:text-xl">Ghina Rania</h4>
+                  <div className="mb-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600 sm:text-sm">
+                    <span className="border-b border-orange-500 px-1 pb-0.5 font-medium text-[#001B34]">Quality Assurance</span>
+                    <span className="border-b border-[#001B34] px-1 pb-0.5 font-medium text-[#001B34]">UI/UX Designer</span>
+                    <span className="border-b border-orange-500 px-1 pb-0.5 font-medium text-[#001B34]">Frontend Developer</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fatimah Azzahidah */}
+              <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all hover:-translate-y-2 hover:shadow-2xl animate-fade-in-up sm:p-8 sm:col-span-2 lg:col-span-1" style={{ animationDelay: "0.3s" }}>
+                <div className="relative mb-4 flex justify-center">
+                  <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
+                    <ImageWithFallback
+                      src="/team/Fatimah Az-Zahidah.png"
                       alt="Fatimah Azzahidah"
-                      className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
-                      style={{ objectFit: 'cover', objectPosition: 'center' }}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent" />
                   </div>
@@ -911,7 +1088,7 @@ export function LandingPage() {
           <div>
             <div className="mb-3 sm:mb-4">
               <Image
-                src="/logo/Logo Poultrigo_Primary.svg"
+                src="/Logo/Logo Poultrigo_Primary.svg"
                 alt="Poultrigo"
                 width={180}
                 height={72}

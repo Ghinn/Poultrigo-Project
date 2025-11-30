@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Poultrigo",
   description: "Smart IoT & ML platform for poultry farms",
+  icons: {
+    icon: "/Logo/Logo Poultrigo_Logomark.svg",
+    shortcut: "/Logo/Logo Poultrigo_Logomark.svg",
+  },
 };
 
 import { ToastProvider } from "@/components/ui/toast-provider";
