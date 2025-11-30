@@ -992,7 +992,7 @@ export function LandingPage() {
                 <div className="relative mb-4 flex justify-center">
                   <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
                     <ImageWithFallback
-                      src="/Team/Muhammad Rizki.jpg"
+                      src="/Team/Muhammad_Rizki.jpg"
                       alt="Muhammad Rizki"
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
@@ -1015,7 +1015,7 @@ export function LandingPage() {
                 <div className="relative mb-4 flex justify-center">
                   <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
                     <ImageWithFallback
-                      src="/Team/Ghina Rania.png"
+                      src="/Team/Ghina_Rania.png"
                       alt="Ghina Rania"
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
@@ -1037,7 +1037,7 @@ export function LandingPage() {
                 <div className="relative mb-4 flex justify-center">
                   <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-orange-200 shadow-lg transition-all group-hover:border-orange-400 group-hover:scale-105 sm:h-40 sm:w-40">
                     <ImageWithFallback
-                      src="/Team/Fatimah Az-Zahidah.png"
+                      src="/Team/Fatimah_Az_Zahidah.png"
                       alt="Fatimah Azzahidah"
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
