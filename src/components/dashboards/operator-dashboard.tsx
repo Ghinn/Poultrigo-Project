@@ -1099,6 +1099,393 @@ export function OperatorDashboard() {
               </div>
             </div>
           )}
+
+          {activeTab === "devices" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={handleOpenCreateDevice}
+                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-white transition-all hover:shadow-lg"
+                >
+                  <Plus className="h-5 w-5" />
+                  Tambah Perangkat
+                </button>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {devices.map((device) => (
+                  <div
+                    key={device.id}
+                    className="rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-lg"
+                  >
+                    <div className="mb-4 flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
+                          {device.type === "Feeder" ? (
+                            <Cpu className="h-6 w-6" />
+                          ) : device.type === "Waterer" ? (
+                            <Droplets className="h-6 w-6" />
+                          ) : (
+                            <Activity className="h-6 w-6" />
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-[#001B34]">
+                            {device.name}
+                          </h3>
+                          <p className="text-sm text-slate-500">{device.type}</p>
+                        </div>
+                      </div>
+                      <div
+                        className={`rounded-full px-3 py-1 text-xs ${device.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-slate-100 text-slate-600"
+                          }`}
+                      >
+                        {device.status}
+                      </div>
+                    </div>
+
+                    <div className="mb-6 space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600">Lokasi</span>
+                        <span className="font-medium text-[#001B34]">
+                          {kandangs.find((k) => k.id === device.kandangId)?.name ||
+                            "Unknown"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600">Baterai</span>
+                        <div className="flex items-center gap-2">
+                          <Battery className="h-4 w-4 text-green-500" />
+                          <span className="font-medium text-[#001B34]">
+                            {device.batteryLevel}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600">Sinyal</span>
+                        <div className="flex items-center gap-2">
+                          <Wifi className="h-4 w-4 text-blue-500" />
+                          <span className="font-medium text-[#001B34]">Good</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleDeviceStatus(device)}
+                        className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${device.status === "Active"
+                          ? "bg-red-50 text-red-600 hover:bg-red-100"
+                          : "bg-green-50 text-green-600 hover:bg-green-100"
+                          }`}
+                      >
+                        <Power className="mr-2 inline h-4 w-4" />
+                        {device.status === "Active" ? "Matikan" : "Hidupkan"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteDevice(device.id)}
+                        className="rounded-lg border border-slate-200 px-3 py-2 text-slate-600 hover:bg-slate-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "prediction" && (
+            <div className="space-y-6">
+              <div className="grid gap-6 lg:grid-cols-2">
+                {/* Input Form */}
+                <div className="rounded-xl border border-slate-200 bg-white p-6">
+                  <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-[#001B34]">
+                    <Calculator className="h-5 w-5 text-orange-500" />
+                    Kalkulator Pakan
+                  </h3>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">
+                        Pilih Kandang
+                      </label>
+                      <select
+                        value={predictionForm.kandangId}
+                        onChange={(e) => {
+                          const k = kandangs.find(k => k.id === e.target.value);
+                          if (k) {
+                            setPredictionForm({
+                              ...predictionForm,
+                              kandangId: k.id,
+                              population: k.population,
+                              age: k.age
+                            });
+                          }
+                        }}
+                        className="w-full rounded-lg border border-slate-200 px-4 py-2.5 focus:border-orange-500 focus:outline-none"
+                      >
+                        <option value="">-- Pilih Kandang --</option>
+                        {kandangs.map(k => (
+                          <option key={k.id} value={k.id}>{k.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="mb-2 block text-sm text-slate-600">
+                          Umur (Hari)
+                        </label>
+                        <input
+                          type="number"
+                          value={predictionForm.age}
+                          readOnly
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-slate-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm text-slate-600">
+                          Jenis Kelamin
+                        </label>
+                        <select
+                          value={predictionForm.gender}
+                          onChange={(e) => setPredictionForm({ ...predictionForm, gender: e.target.value as any })}
+                          className="w-full rounded-lg border border-slate-200 px-4 py-2.5 focus:border-orange-500 focus:outline-none"
+                        >
+                          <option value="Jantan">Jantan</option>
+                          <option value="Betina">Betina</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="mb-2 block text-sm text-slate-600">
+                          Populasi (Ekor)
+                        </label>
+                        <input
+                          type="number"
+                          value={predictionForm.population}
+                          onChange={(e) => setPredictionForm({ ...predictionForm, population: parseInt(e.target.value) || 0 })}
+                          className="w-full rounded-lg border border-slate-200 px-4 py-2.5 focus:border-orange-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm text-slate-600">
+                          Pakan Kemarin (kg)
+                        </label>
+                        <input
+                          type="number"
+                          value={predictionForm.feedYesterday}
+                          onChange={(e) => setPredictionForm({ ...predictionForm, feedYesterday: parseFloat(e.target.value) || 0 })}
+                          className="w-full rounded-lg border border-slate-200 px-4 py-2.5 focus:border-orange-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm text-slate-600">
+                        Sisa Pakan (kg)
+                      </label>
+                      <input
+                        type="number"
+                        value={predictionForm.leftover}
+                        onChange={(e) => setPredictionForm({ ...predictionForm, leftover: parseFloat(e.target.value) || 0 })}
+                        className="w-full rounded-lg border border-slate-200 px-4 py-2.5 focus:border-orange-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {error && (
+                      <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                        {error}
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleCalculatePrediction}
+                      className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 py-3 font-medium text-white shadow-lg transition-all hover:shadow-xl"
+                    >
+                      Hitung Prediksi
+                    </button>
+                  </div>
+                </div>
+
+                {/* Result Card */}
+                <div className="space-y-6">
+                  <div className="rounded-xl border border-slate-200 bg-white p-6">
+                    <h3 className="mb-4 text-lg font-semibold text-[#001B34]">
+                      Hasil Prediksi
+                    </h3>
+                    {predictionResult !== null ? (
+                      <div className="text-center">
+                        <div className="mb-2 text-sm text-slate-500">
+                          Kebutuhan Pakan Hari Ini
+                        </div>
+                        <div className="mb-4 text-5xl font-bold text-orange-500">
+                          {predictionResult} <span className="text-xl text-slate-400">kg</span>
+                        </div>
+                        <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+                          <p>
+                            Rekomendasi: Berikan pakan secara bertahap (pagi & sore) untuk efisiensi maksimal.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex h-40 items-center justify-center text-slate-400">
+                        Belum ada data prediksi
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 p-6 text-white">
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="rounded-lg bg-white/10 p-2">
+                        <Cpu className="h-6 w-6 text-orange-400" />
+                      </div>
+                      <div>
+                        <div className="font-medium">Info Model AI</div>
+                        <div className="text-xs text-slate-400">v1.0.2 (Random Forest)</div>
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      Model prediksi menggunakan data historis 30 hari terakhir dengan akurasi rata-rata 94%.
+                      Faktor cuaca dan kelembaban juga diperhitungkan.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "reports" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between print:hidden">
+                <h2 className="text-xl font-bold text-[#001B34]">Laporan & Arsip</h2>
+                <button
+                  onClick={handlePrintReport}
+                  className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50"
+                >
+                  <Printer className="h-4 w-4" />
+                  Cetak / Export PDF
+                </button>
+              </div>
+
+              {/* Prediction History Report */}
+              <div className="rounded-xl border border-slate-200 bg-white p-6">
+                <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-4">
+                  <FileText className="h-5 w-5 text-orange-500" />
+                  <h3 className="text-lg font-semibold text-[#001B34]">
+                    Riwayat Prediksi Pakan
+                  </h3>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-500">
+                      <tr>
+                        <th className="rounded-l-lg px-4 py-3 font-medium">Tanggal</th>
+                        <th className="px-4 py-3 font-medium">Kandang</th>
+                        <th className="px-4 py-3 font-medium">Populasi</th>
+                        <th className="px-4 py-3 font-medium">Sisa Pakan</th>
+                        <th className="rounded-r-lg px-4 py-3 font-medium">Hasil Prediksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {predictions.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                            Belum ada data prediksi
+                          </td>
+                        </tr>
+                      ) : (
+                        predictions.map((p) => (
+                          <tr key={p.id} className="hover:bg-slate-50">
+                            <td className="px-4 py-3 text-slate-600">
+                              {new Date(p.date).toLocaleDateString("id-ID")}
+                            </td>
+                            <td className="px-4 py-3 font-medium text-[#001B34]">
+                              {p.kandangName}
+                            </td>
+                            <td className="px-4 py-3 text-slate-600">
+                              {p.inputs.population.toLocaleString()}
+                            </td>
+                            <td className="px-4 py-3 text-slate-600">
+                              {p.inputs.leftover} kg
+                            </td>
+                            <td className="px-4 py-3 font-bold text-orange-600">
+                              {p.result} kg
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Kandang History Report */}
+              <div className="rounded-xl border border-slate-200 bg-white p-6">
+                <h3 className="mb-6 text-lg text-[#001B34]">
+                  Riwayat Aktivitas Kandang
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="border-b border-slate-200 text-slate-500">
+                      <tr>
+                        <th className="px-4 py-3 font-medium">Waktu</th>
+                        <th className="px-4 py-3 font-medium">Kandang</th>
+                        <th className="px-4 py-3 font-medium">Aksi</th>
+                        <th className="px-4 py-3 font-medium">Populasi</th>
+                        <th className="px-4 py-3 font-medium">Usia</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {history.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                            Belum ada riwayat aktivitas
+                          </td>
+                        </tr>
+                      ) : (
+                        history.map((item) => (
+                          <tr key={item.id} className="hover:bg-slate-50">
+                            <td className="px-4 py-3 text-slate-600">
+                              {new Date(item.timestamp).toLocaleString("id-ID")}
+                            </td>
+                            <td className="px-4 py-3 font-medium text-[#001B34]">
+                              {item.kandangName}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={`rounded-full px-2 py-1 text-xs ${item.action === "Created"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-blue-100 text-blue-700"
+                                  }`}
+                              >
+                                {item.action === "Created" ? "Dibuat" : "Diupdate"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-slate-600">
+                              {item.population.toLocaleString()}
+                            </td>
+                            <td className="px-4 py-3 text-slate-600">
+                              {item.age} hari
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Modal Kandang */}
