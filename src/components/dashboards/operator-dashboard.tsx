@@ -600,7 +600,7 @@ export function OperatorDashboard() {
         <div className="p-4 sm:p-6">
           {activeTab === "overview" && (
             <div className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {[
                   {
                     label: "Total Kandang",
@@ -625,15 +625,7 @@ export function OperatorDashboard() {
                     color: "bg-green-500",
                     trend: "Normal",
                   },
-                  {
-                    label: "Status Sistem",
-                    value: kandangs.filter((k) => k.status === "Optimal").length === kandangs.length
-                      ? "Optimal"
-                      : "Peringatan",
-                    icon: Activity,
-                    color: "bg-purple-500",
-                    trend: "99.8%",
-                  },
+
                 ].map((stat) => (
                   <div
                     key={stat.label}
@@ -656,157 +648,65 @@ export function OperatorDashboard() {
               </div>
 
               <div className="grid gap-6 lg:grid-cols-3">
+
                 <div className="space-y-6 lg:col-span-2">
                   <div className="rounded-xl border border-slate-200 bg-white p-6">
-                    <div className="mb-6 flex items-center justify-between">
-                      <h3 className="text-lg text-[#001B34]">
-                        Pemantauan Sensor Real-Time
-                      </h3>
-                      <select className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:border-orange-500 focus:outline-none">
-                        <option>Kandang A1</option>
-                        <option>Kandang A2</option>
-                        <option>Kandang B1</option>
-                        <option>Kandang B2</option>
-                      </select>
-                    </div>
-
-                    <div className="mb-6 grid grid-cols-3 gap-4">
-                      {[
-                        {
-                          label: "Suhu",
-                          value: "28°C",
-                          icon: Thermometer,
-                          color: "text-orange-500",
-                          status: "Normal",
-                        },
-                        {
-                          label: "Kelembaban",
-                          value: "65%",
-                          icon: Droplets,
-                          color: "text-blue-500",
-                          status: "Normal",
-                        },
-                        {
-                          label: "Amonia",
-                          value: "Low",
-                          icon: Wind,
-                          color: "text-green-500",
-                          status: "Optimal",
-                        },
-                      ].map((sensor) => (
-                        <div
-                          key={sensor.label}
-                          className="rounded-lg border border-slate-200 bg-slate-50 p-4"
-                        >
-                          <sensor.icon
-                            className={`mb-2 h-6 w-6 ${sensor.color}`}
-                          />
-                          <div className="mb-1 text-sm text-slate-600">
-                            {sensor.label}
-                          </div>
-                          <div className="mb-1 text-2xl text-[#001B34]">
-                            {sensor.value}
-                          </div>
-                          <div className="text-xs text-green-600">
-                            {sensor.status}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <ResponsiveContainer width="100%" height={250}>
-                      <AreaChart data={sensorData}>
-                        <defs>
-                          <linearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-                          </linearGradient>
-                          <linearGradient id="humidityGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis dataKey="time" stroke="#64748b" />
-                        <YAxis stroke="#64748b" />
-                        <Tooltip />
-                        <Legend />
-                        <Area
-                          type="monotone"
-                          dataKey="temp"
-                          stroke="#f97316"
-                          fillOpacity={1}
-                          fill="url(#tempGradient)"
-                          name="Suhu (°C)"
-                          isAnimationActive={false}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="humidity"
-                          stroke="#3b82f6"
-                          fillOpacity={1}
-                          fill="url(#humidityGradient)"
-                          name="Kelembaban (%)"
-                          isAnimationActive={false}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                    <div className="relative h-48">
-                      <ImageWithFallback
-                        src="https://images.unsplash.com/photo-1694854038360-56b29a16fb0c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
-                        alt="Farm Overview"
-                        className="h-full w-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute bottom-4 left-4 right-4 text-white">
-                        <div className="text-sm">Tampilan Kandang Langsung</div>
-                        <div className="text-lg">
-                          Kandang A1 - Operasi Aktif
-                        </div>
-                      </div>
+                    <h3 className="mb-6 text-lg text-[#001B34]">
+                      Riwayat Aktivitas Kandang
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead className="border-b border-slate-200 text-slate-500">
+                          <tr>
+                            <th className="px-4 py-3 font-medium">Waktu</th>
+                            <th className="px-4 py-3 font-medium">Kandang</th>
+                            <th className="px-4 py-3 font-medium">Aksi</th>
+                            <th className="px-4 py-3 font-medium">Populasi</th>
+                            <th className="px-4 py-3 font-medium">Usia</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          {history.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                                Belum ada riwayat aktivitas
+                              </td>
+                            </tr>
+                          ) : (
+                            history.map((item) => (
+                              <tr key={item.id} className="hover:bg-slate-50">
+                                <td className="px-4 py-3 text-slate-600">
+                                  {new Date(item.timestamp).toLocaleString("id-ID")}
+                                </td>
+                                <td className="px-4 py-3 font-medium text-[#001B34]">
+                                  {item.kandangName}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span
+                                    className={`rounded-full px-2 py-1 text-xs ${item.action === "Created"
+                                      ? "bg-green-100 text-green-700"
+                                      : "bg-blue-100 text-blue-700"
+                                      }`}
+                                  >
+                                    {item.action === "Created" ? "Dibuat" : "Diupdate"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-slate-600">
+                                  {item.population.toLocaleString()}
+                                </td>
+                                <td className="px-4 py-3 text-slate-600">
+                                  {item.age} hari
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <div className="rounded-xl border border-slate-200 bg-white p-6">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h3 className="text-lg text-[#001B34]">Alert Terbaru</h3>
-                      <Bell className="h-5 w-5 text-slate-400" />
-                    </div>
-                    <div className="space-y-3">
-                      {alerts.map((alert) => (
-                        <div
-                          key={alert.id}
-                          className={`rounded-lg border-l-4 p-3 ${alert.type === "warning"
-                            ? "border-orange-500 bg-orange-50"
-                            : "border-blue-500 bg-blue-50"
-                            }`}
-                        >
-                          <div className="flex items-start gap-2">
-                            <AlertTriangle
-                              className={`mt-0.5 h-4 w-4 ${alert.type === "warning"
-                                ? "text-orange-500"
-                                : "text-blue-500"
-                                }`}
-                            />
-                            <div>
-                              <div className="text-xs text-slate-500">
-                                {alert.kandang}
-                              </div>
-                              <p className="text-sm text-slate-700">
-                                {alert.message}
-                              </p>
-                              <p className="text-xs text-slate-500">{alert.time}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
 
                   <div className="rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white">
                     <h3 className="mb-4 text-lg">Aksi Cepat</h3>
@@ -848,6 +748,7 @@ export function OperatorDashboard() {
                   </div>
                 </div>
               </div>
+
             </div>
           )}
 
@@ -1430,60 +1331,7 @@ export function OperatorDashboard() {
               </div>
 
               {/* Kandang History Report */}
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
-                <h3 className="mb-6 text-lg text-[#001B34]">
-                  Riwayat Aktivitas Kandang
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 text-slate-500">
-                      <tr>
-                        <th className="px-4 py-3 font-medium">Waktu</th>
-                        <th className="px-4 py-3 font-medium">Kandang</th>
-                        <th className="px-4 py-3 font-medium">Aksi</th>
-                        <th className="px-4 py-3 font-medium">Populasi</th>
-                        <th className="px-4 py-3 font-medium">Usia</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {history.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                            Belum ada riwayat aktivitas
-                          </td>
-                        </tr>
-                      ) : (
-                        history.map((item) => (
-                          <tr key={item.id} className="hover:bg-slate-50">
-                            <td className="px-4 py-3 text-slate-600">
-                              {new Date(item.timestamp).toLocaleString("id-ID")}
-                            </td>
-                            <td className="px-4 py-3 font-medium text-[#001B34]">
-                              {item.kandangName}
-                            </td>
-                            <td className="px-4 py-3">
-                              <span
-                                className={`rounded-full px-2 py-1 text-xs ${item.action === "Created"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-blue-100 text-blue-700"
-                                  }`}
-                              >
-                                {item.action === "Created" ? "Dibuat" : "Diupdate"}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-slate-600">
-                              {item.population.toLocaleString()}
-                            </td>
-                            <td className="px-4 py-3 text-slate-600">
-                              {item.age} hari
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+
             </div>
           )}
         </div>
