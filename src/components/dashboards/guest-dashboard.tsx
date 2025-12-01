@@ -1,6 +1,4 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -22,7 +20,9 @@ import {
   Newspaper,
   Trash,
   Minus,
-  Plus
+  Plus,
+  ShoppingBag,
+  ArrowRight
 } from "lucide-react";
 import {
   AreaChart,
@@ -35,7 +35,7 @@ import {
 } from "recharts";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
 import useIsClient from "@/hooks/use-is-client";
-import { setCurrentUser } from "@/utils/auth";
+import { setCurrentUser, getCurrentUser, User } from "@/utils/auth";
 import { logout } from "@/actions/auth";
 import { addToCart, updateCart, removeFromCart, checkout } from "@/actions/shop";
 import { useToast } from "@/components/ui/toast-provider";
@@ -91,7 +91,13 @@ export function GuestDashboard({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const [cartLoading, setCartLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    setUser(currentUser);
+  }, []);
 
   const handleAddToCart = async (productId: string) => {
     setAddingToCart(productId);
@@ -148,105 +154,6 @@ export function GuestDashboard({
     }
   };
 
-  const currentStats = [
-    {
-      label: "Peternakan Aktif",
-      value: "12",
-      icon: Home,
-      color: "text-blue-500",
-      bgColor: "bg-blue-500",
-    },
-    {
-      label: "Total Ayam",
-      value: "18,500",
-      icon: ChickensIcon,
-      color: "text-green-500",
-      bgColor: "bg-green-500",
-    },
-    {
-      label: "Rata-rata Suhu",
-      value: "28°C",
-      icon: Thermometer,
-      color: "text-orange-500",
-      bgColor: "bg-orange-500",
-    },
-    {
-      label: "Status Sistem",
-      value: "Optimal",
-      icon: Activity,
-      color: "text-green-500",
-      bgColor: "bg-green-500",
-    },
-  ];
-
-  const sensorData = [
-    { time: "00:00", temp: 27, humidity: 68 },
-    { time: "04:00", temp: 26, humidity: 70 },
-    { time: "08:00", temp: 28, humidity: 65 },
-    { time: "12:00", temp: 30, humidity: 62 },
-    { time: "16:00", temp: 29, humidity: 64 },
-    { time: "20:00", temp: 28, humidity: 67 },
-  ];
-
-  const farmOverview = [
-    {
-      id: 1,
-      name: "Farm A - Kandang A1",
-      population: 1500,
-      age: 25,
-      status: "Optimal",
-      temp: "28°C",
-    },
-    {
-      id: 2,
-      name: "Farm A - Kandang A2",
-      population: 1450,
-      age: 20,
-      status: "Baik",
-      temp: "29°C",
-    },
-    {
-      id: 3,
-      name: "Farm B - Kandang B1",
-      population: 1600,
-      age: 30,
-      status: "Optimal",
-      temp: "27°C",
-    },
-    {
-      id: 4,
-      name: "Farm B - Kandang B2",
-      population: 1550,
-      age: 18,
-      status: "Optimal",
-      temp: "28°C",
-    },
-  ];
-
-  const recentAlerts = [
-    {
-      id: 1,
-      type: "info",
-      farm: "Farm A",
-      message: "Jadwal pemberian pakan diperbarui",
-      time: "10 menit lalu",
-    },
-    {
-      id: 2,
-      type: "success",
-      farm: "Farm B",
-      message: "Suhu optimal di semua kandang",
-      time: "30 menit lalu",
-    },
-    {
-      id: 3,
-      type: "info",
-      farm: "Farm A",
-      message: "Data sensor baru tersedia",
-      time: "1 jam lalu",
-    },
-  ];
-
   const myOrders = initialOrders;
 
   if (!isClient) {
@@ -286,7 +193,7 @@ export function GuestDashboard({
                 />
                 <div>
                   <div className="font-semibold text-white">Poultrigo</div>
-                  <div className="text-xs text-orange-100">Guest / Pembeli</div>
+                  <div className="text-xs text-orange-100">{user?.name || "Guest / Pembeli"}</div>
                 </div>
               </div>
               <button
@@ -368,7 +275,7 @@ export function GuestDashboard({
                   {activeTab === "orders" && "Pesanan Saya"}
                 </h1>
                 <p className="hidden text-xs text-slate-500 sm:block sm:text-sm">
-                  {activeTab === "overview" && "Portal pemantauan & pembelian"}
+                  {activeTab === "overview" && "Selamat datang di Poultrigo Store"}
                   {activeTab === "products" && "Lihat produk dan harga"}
                   {activeTab === "cart" && "Kelola item keranjang Anda"}
                   {activeTab === "orders" && "Kelola pesanan Anda"}
@@ -406,183 +313,146 @@ export function GuestDashboard({
           <div className="mx-auto max-w-7xl">
             {activeTab === "overview" && (
               <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-6">
-                  {currentStats.map((stat) => (
-                    <div
-                      key={stat.label}
-                      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md lg:p-6"
-                    >
-                      <div className="mb-3 flex items-start justify-between">
-                        <div className="rounded-lg bg-slate-50 p-2">
-                          <stat.icon className={`h-5 w-5 ${stat.color}`} />
-                        </div>
-                      </div>
-                      <div className="mb-1 text-xl text-[#001B34] lg:text-2xl">
-                        {stat.value}
-                      </div>
-                      <div className="text-xs text-slate-600 lg:text-sm">
-                        {stat.label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid gap-6 lg:grid-cols-2">
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
-                    <div className="mb-6 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg text-[#001B34]">
-                          Ikhtisar Suhu
-                        </h3>
-                        <p className="text-sm text-slate-600">
-                          Pemantauan 24 jam terakhir
-                        </p>
-                      </div>
-                      <Thermometer className="h-5 w-5 text-orange-500 lg:h-6 lg:w-6" />
-                    </div>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <AreaChart data={sensorData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                        <XAxis dataKey="time" stroke="#94a3b8" tick={{ fontSize: 12 }} />
-                        <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} />
-                        <Tooltip />
-                        <Area
-                          type="monotone"
-                          dataKey="temp"
-                          stroke="#f97316"
-                          fill="#fed7aa"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
-                    <div className="mb-6 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg text-[#001B34]">
-                          Ikhtisar Kelembaban
-                        </h3>
-                        <p className="text-sm text-slate-600">
-                          Pemantauan 24 jam terakhir
-                        </p>
-                      </div>
-                      <Droplets className="h-5 w-5 text-blue-500 lg:h-6 lg:w-6" />
-                    </div>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <AreaChart data={sensorData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                        <XAxis dataKey="time" stroke="#94a3b8" tick={{ fontSize: 12 }} />
-                        <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} />
-                        <Tooltip />
-                        <Area
-                          type="monotone"
-                          dataKey="humidity"
-                          stroke="#3b82f6"
-                          fill="#bfdbfe"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                  <div className="border-b border-slate-200 p-4 lg:p-6">
-                    <h3 className="text-lg text-[#001B34]">Ikhtisar Peternakan</h3>
-                    <p className="text-sm text-slate-600">
-                      Status semua peternakan saat ini (Hanya Baca)
+                {/* Welcome Banner */}
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 p-6 text-white shadow-lg lg:p-10">
+                  <div className="relative z-10 max-w-2xl">
+                    <h2 className="mb-4 text-2xl font-bold lg:text-3xl">
+                      Halo, {user?.name || "Pelanggan Setia"}! 👋
+                    </h2>
+                    <p className="mb-6 text-orange-50 lg:text-lg">
+                      Selamat datang kembali di Poultrigo. Temukan produk ayam berkualitas terbaik langsung dari peternakan kami. Segar, sehat, dan terpercaya.
                     </p>
+                    <button
+                      onClick={() => setActiveTab("products")}
+                      className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 font-semibold text-orange-600 transition-colors hover:bg-orange-50"
+                    >
+                      <ShoppingBag className="h-5 w-5" />
+                      Mulai Belanja
+                    </button>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-slate-50">
-                        <tr>
-                          {["Nama Peternakan", "Populasi", "Usia (hari)", "Suhu", "Status"].map(
-                            (header) => (
-                              <th
-                                key={header}
-                                className="px-4 py-3 text-left text-sm text-slate-600 lg:px-6"
-                              >
-                                {header}
-                              </th>
-                            ),
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200">
-                        {farmOverview.map((farm) => (
-                          <tr key={farm.id} className="hover:bg-slate-50">
-                            <td className="px-4 py-4 text-sm text-[#001B34] lg:px-6">
-                              {farm.name}
-                            </td>
-                            <td className="px-4 py-4 text-sm text-slate-600 lg:px-6">
-                              {farm.population.toLocaleString()}
-                            </td>
-                            <td className="px-4 py-4 text-sm text-slate-600 lg:px-6">
-                              {farm.age} hari
-                            </td>
-                            <td className="px-4 py-4 text-sm text-slate-600 lg:px-6">
-                              {farm.temp}
-                            </td>
-                            <td className="px-4 py-4 lg:px-6">
-                              <span
-                                className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs ${farm.status === "Optimal"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-blue-100 text-blue-700"
-                                  }`}
-                              >
-                                {farm.status === "Optimal" ? (
-                                  <CheckCircle className="h-3 w-3" />
-                                ) : (
-                                  <Info className="h-3 w-3" />
-                                )}
-                                {farm.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="absolute -bottom-10 -right-10 opacity-10">
+                    <Image
+                      src="/Logo/Logo Poultrigo_Navy_Primary.svg"
+                      alt="Background"
+                      width={400}
+                      height={400}
+                      className="h-64 w-64 lg:h-96 lg:w-96"
+                    />
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
+                {/* Buyer Stats */}
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                  <div
+                    onClick={() => setActiveTab("cart")}
+                    className="cursor-pointer rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-orange-200 hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="rounded-full bg-orange-100 p-3 text-orange-600">
+                        <ShoppingCart className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-slate-900">{initialCart.items.length}</div>
+                        <div className="text-sm text-slate-500">Item di Keranjang</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    onClick={() => setActiveTab("orders")}
+                    className="cursor-pointer rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-blue-200 hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="rounded-full bg-blue-100 p-3 text-blue-600">
+                        <ShoppingBag className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-slate-900">{initialOrders.length}</div>
+                        <div className="text-sm text-slate-500">Total Pesanan</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Featured Products Preview */}
+                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="mb-6 flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg text-[#001B34]">
-                        Peringatan & Pembaruan Terbaru
-                      </h3>
-                      <p className="text-sm text-slate-600">
-                        Notifikasi sistem
-                      </p>
+                      <h3 className="text-lg font-bold text-[#001B34]">Produk Unggulan</h3>
+                      <p className="text-sm text-slate-600">Pilihan terbaik untuk Anda</p>
                     </div>
-                    <Bell className="h-5 w-5 text-blue-500 lg:h-6 lg:w-6" />
+                    <button
+                      onClick={() => setActiveTab("products")}
+                      className="flex items-center gap-1 text-sm font-medium text-orange-600 hover:text-orange-700"
+                    >
+                      Lihat Semua <ArrowRight className="h-4 w-4" />
+                    </button>
                   </div>
-                  <div className="space-y-3">
-                    {recentAlerts.map((alert) => (
+                  <div className="grid gap-6 md:grid-cols-3">
+                    {initialProducts.slice(0, 3).map((product) => (
                       <div
-                        key={alert.id}
-                        className="flex items-start gap-4 rounded-lg bg-slate-50 p-4 transition-colors hover:bg-slate-100"
+                        key={product.id}
+                        className="group cursor-pointer overflow-hidden rounded-lg border border-slate-100 transition-all hover:border-orange-200 hover:shadow-md"
+                        onClick={() => setActiveTab("products")}
                       >
-                        <div
-                          className={`mt-2 h-2 w-2 rounded-full ${alert.type === "success" ? "bg-green-500" : "bg-blue-500"
-                            }`}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-1 flex items-center gap-2">
-                            <span className="text-sm text-[#001B34]">
-                              {alert.farm}
-                            </span>
-                            <span className="text-xs text-slate-500">•</span>
-                            <span className="text-xs text-slate-500">
-                              {alert.time}
-                            </span>
-                          </div>
-                          <p className="text-sm text-slate-600">{alert.message}</p>
+                        <div className="relative h-40 bg-slate-100">
+                          <ImageWithFallback
+                            src={product.image_url || '/placeholder.png'}
+                            alt={product.name}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        </div>
+                        <div className="p-4">
+                          <h4 className="mb-1 font-semibold text-slate-900">{product.name}</h4>
+                          <p className="font-medium text-orange-600">Rp {product.price.toLocaleString()}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
+
+                {/* Recent Orders Preview */}
+                {initialOrders.length > 0 && (
+                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div className="mb-6 flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold text-[#001B34]">Pesanan Terakhir</h3>
+                        <p className="text-sm text-slate-600">Status pesanan terbaru Anda</p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab("orders")}
+                        className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Lihat Semua <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {initialOrders.slice(0, 3).map((order) => (
+                        <div key={order.id} className="flex items-center justify-between rounded-lg border border-slate-100 p-4">
+                          <div className="flex items-center gap-4">
+                            <div className="rounded-full bg-slate-100 p-2">
+                              <Package className="h-5 w-5 text-slate-600" />
+                            </div>
+                            <div>
+                              <div className="font-medium text-slate-900">{order.product}</div>
+                              <div className="text-xs text-slate-500">{order.date} • {order.id}</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium text-slate-900">{order.total}</div>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${order.status === "Delivered"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-blue-100 text-blue-700"
+                                }`}
+                            >
+                              {order.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
