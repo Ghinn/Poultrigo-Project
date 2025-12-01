@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
   Lock,
-  Mail,
+  User,
   ArrowLeft,
   Eye,
   EyeOff,
@@ -17,7 +17,7 @@ import { login } from "@/actions/auth";
 export function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -38,7 +38,7 @@ export function LoginPage() {
     setError("");
 
     const formData = new FormData();
-    formData.append("email", email);
+    formData.append("username", username);
     formData.append("password", password);
 
     const result = await login(null, formData);
@@ -149,16 +149,16 @@ export function LoginPage() {
             <form className="relative z-30 space-y-6" onSubmit={handleLogin}>
               <div>
                 <label className="mb-2 block text-sm text-slate-600">
-                  Alamat email
+                  Username
                 </label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <User className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
-                    type="email"
+                    type="text"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="nama@perusahaan.com"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Masukkan username"
                     className="w-full rounded-lg border-2 border-slate-200 bg-white py-3 pl-12 pr-4 text-base text-slate-900 placeholder:text-slate-400 caret-orange-500 focus:border-orange-500 focus:outline-none"
                   />
                 </div>
