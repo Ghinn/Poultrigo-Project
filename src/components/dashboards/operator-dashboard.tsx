@@ -57,14 +57,16 @@ import {
   saveKandang,
   updateKandang,
   deleteKandang,
+  getKandangHistory,
+  type KandangData as Kandang,
+  type KandangHistoryData as KandangHistory,
+} from "@/actions/operator";
+import {
   getDailyRecords,
   saveDailyRecord,
   updateDailyRecord,
   deleteDailyRecord,
-  getKandangHistory,
-  type Kandang,
   type DailyRecord,
-  type KandangHistory,
   getDevices,
   saveDevice,
   updateDevice,
@@ -87,12 +89,7 @@ export function OperatorDashboard() {
   >("overview");
 
   // CRUD State for Kandang
-  const [kandangs, setKandangs] = useState<Kandang[]>(() => {
-    if (typeof window !== "undefined") {
-      return getKandangs();
-    }
-    return [];
-  });
+  const [kandangs, setKandangs] = useState<Kandang[]>([]);
   const [selectedKandang, setSelectedKandang] = useState<Kandang | null>(null);
   const [kandangFormData, setKandangFormData] = useState({
     name: "",
@@ -100,6 +97,15 @@ export function OperatorDashboard() {
     age: 0,
     status: "Optimal" as "Optimal" | "Peringatan" | "Kritis",
   });
+
+  // Load Kandangs on mount
+  useEffect(() => {
+    const fetchKandangs = async () => {
+      const data = await getKandangs();
+      setKandangs(data);
+    };
+    fetchKandangs();
+  }, []);
 
   // CRUD State for Daily Records
   const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>(() => {
@@ -123,11 +129,10 @@ export function OperatorDashboard() {
   });
 
   // Load functions for manual refresh
-  const loadKandangs = useCallback(() => {
-    if (isClient) {
-      setKandangs(getKandangs());
-    }
-  }, [isClient]);
+  const loadKandangs = useCallback(async () => {
+    const data = await getKandangs();
+    setKandangs(data);
+  }, []);
 
   const loadDailyRecords = useCallback(() => {
     if (isClient) {
@@ -136,19 +141,24 @@ export function OperatorDashboard() {
   }, [isClient]);
 
   // History State
-  const loadHistoryAndPredictions = useCallback(() => {
+  const loadHistoryAndPredictions = useCallback(async () => {
+    const historyData = await getKandangHistory();
+    setHistory(historyData);
     if (isClient) {
-      setHistory(getKandangHistory());
       setPredictions(getPredictions());
     }
   }, [isClient]);
 
-  const [history, setHistory] = useState<KandangHistory[]>(() => {
-    if (typeof window !== "undefined") {
-      return getKandangHistory();
-    }
-    return [];
-  });
+  const [history, setHistory] = useState<KandangHistory[]>([]);
+
+  // Load History on mount
+  useEffect(() => {
+    const fetchHistory = async () => {
+      const data = await getKandangHistory();
+      setHistory(data);
+    };
+    fetchHistory();
+  }, []);
 
   // Device State
   const loadDevices = useCallback(() => {
@@ -272,7 +282,7 @@ export function OperatorDashboard() {
     setModalMode("view-kandang");
   };
 
-  const handleSaveKandang = () => {
+  const handleSaveKandang = async () => {
     setError("");
 
     if (!kandangFormData.name.trim()) {
@@ -288,22 +298,27 @@ export function OperatorDashboard() {
       return;
     }
 
-    if (modalMode === "create-kandang") {
-      saveKandang(kandangFormData);
-    } else if (modalMode === "edit-kandang" && selectedKandang) {
-      updateKandang(selectedKandang.id, kandangFormData);
-    }
+    try {
+      if (modalMode === "create-kandang") {
+        await saveKandang(kandangFormData);
+      } else if (modalMode === "edit-kandang" && selectedKandang) {
+        await updateKandang(selectedKandang.id, kandangFormData);
+      }
 
-    loadKandangs();
-    loadHistoryAndPredictions(); // Refresh history
-    setModalMode(null);
-    setSelectedKandang(null);
+      await loadKandangs();
+      await loadHistoryAndPredictions(); // Refresh history
+      setModalMode(null);
+      setSelectedKandang(null);
+    } catch (err) {
+      setError("Gagal menyimpan data kandang");
+      console.error(err);
+    }
   };
 
-  const handleDeleteKandang = (kandangId: string) => {
+  const handleDeleteKandang = async (kandangId: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus kandang ini?")) {
-      deleteKandang(kandangId);
-      loadKandangs();
+      await deleteKandang(kandangId);
+      await loadKandangs();
       if (selectedKandang?.id === kandangId) {
         setModalMode(null);
         setSelectedKandang(null);
@@ -942,64 +957,7 @@ export function OperatorDashboard() {
             </div>
           )}
 
-          {activeTab === "reports" && (
-            <div className="space-y-6">
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
-                <h3 className="mb-6 text-lg text-[#001B34]">
-                  Riwayat Aktivitas Kandang
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 text-slate-500">
-                      <tr>
-                        <th className="px-4 py-3 font-medium">Waktu</th>
-                        <th className="px-4 py-3 font-medium">Kandang</th>
-                        <th className="px-4 py-3 font-medium">Aksi</th>
-                        <th className="px-4 py-3 font-medium">Populasi</th>
-                        <th className="px-4 py-3 font-medium">Usia</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {history.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                            Belum ada riwayat aktivitas
-                          </td>
-                        </tr>
-                      ) : (
-                        history.map((item) => (
-                          <tr key={item.id} className="hover:bg-slate-50">
-                            <td className="px-4 py-3 text-slate-600">
-                              {new Date(item.timestamp).toLocaleString("id-ID")}
-                            </td>
-                            <td className="px-4 py-3 font-medium text-[#001B34]">
-                              {item.kandangName}
-                            </td>
-                            <td className="px-4 py-3">
-                              <span
-                                className={`rounded-full px-2 py-1 text-xs ${item.action === "Created"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-blue-100 text-blue-700"
-                                  }`}
-                              >
-                                {item.action === "Created" ? "Dibuat" : "Diupdate"}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-slate-600">
-                              {item.population.toLocaleString()}
-                            </td>
-                            <td className="px-4 py-3 text-slate-600">
-                              {item.age} hari
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {activeTab === "devices" && (
             <div className="space-y-6">
