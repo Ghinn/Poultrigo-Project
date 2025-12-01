@@ -79,6 +79,7 @@ import {
 import { logout } from "@/actions/auth";
 import { setCurrentUser } from "@/utils/auth";
 import { useToast } from "@/components/ui/toast-provider";
+import { predictFeed } from "@/actions/prediction";
 
 type ModalMode = "create-kandang" | "edit-kandang" | "view-kandang" | "create-daily" | "edit-daily" | "create-device" | "delete-confirmation" | null;
 
@@ -469,7 +470,7 @@ export function OperatorDashboard() {
   };
 
   // Prediction Logic
-  const handleCalculatePrediction = () => {
+  const handleCalculatePrediction = async () => {
     setError("");
     if (!predictionForm.kandangId) {
       setError("Pilih kandang terlebih dahulu");
@@ -480,26 +481,46 @@ export function OperatorDashboard() {
       return;
     }
 
-    // Mock Prediction Logic: (Population * 0.12) - Leftover
-    // In real app, this would call the ML API
-    const baseNeed = predictionForm.gender === "Jantan" ? 0.12 : 0.11;
-    const predictedAmount = Math.round((predictionForm.population * baseNeed) - predictionForm.leftover);
+    try {
+      showToast("Sedang menghitung prediksi...", "info");
 
-    setPredictionResult(predictedAmount);
+      const result = await predictFeed({
+        age: predictionForm.age,
+        gender: predictionForm.gender,
+        population: predictionForm.population,
+        feedYesterday: predictionForm.feedYesterday,
+        leftover: predictionForm.leftover,
+      });
 
-    // Save to history
-    const kandangName = kandangs.find(k => k.id === predictionForm.kandangId)?.name || "Unknown";
-    savePrediction({
-      date: new Date().toISOString(),
-      kandangId: predictionForm.kandangId,
-      kandangName: kandangName,
-      inputs: predictionForm,
-      result: predictedAmount,
-    });
+      // Ensure result is a valid number
+      const predictedAmount = Math.round(Number(result));
 
-    // Reload predictions for report
-    if (isClient) {
-      setPredictions(getPredictions());
+      if (isNaN(predictedAmount)) {
+        throw new Error("Hasil prediksi tidak valid");
+      }
+
+      setPredictionResult(predictedAmount);
+
+      // Save to history
+      const kandangName = kandangs.find(k => k.id === predictionForm.kandangId)?.name || "Unknown";
+      savePrediction({
+        date: new Date().toISOString(),
+        kandangId: predictionForm.kandangId,
+        kandangName: kandangName,
+        inputs: predictionForm,
+        result: predictedAmount,
+      });
+
+      // Reload predictions for report
+      if (isClient) {
+        setPredictions(getPredictions());
+      }
+
+      showToast("Prediksi berhasil dihitung", "success");
+    } catch (err) {
+      console.error(err);
+      setError("Gagal menghitung prediksi. Pastikan koneksi internet lancar.");
+      showToast("Gagal menghitung prediksi", "error");
     }
   };
 
