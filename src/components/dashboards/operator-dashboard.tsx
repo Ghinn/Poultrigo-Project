@@ -78,12 +78,14 @@ import {
 } from "@/utils/operator-data";
 import { logout } from "@/actions/auth";
 import { setCurrentUser } from "@/utils/auth";
+import { useToast } from "@/components/ui/toast-provider";
 
-type ModalMode = "create-kandang" | "edit-kandang" | "view-kandang" | "create-daily" | "edit-daily" | "create-device" | null;
+type ModalMode = "create-kandang" | "edit-kandang" | "view-kandang" | "create-daily" | "edit-daily" | "create-device" | "delete-confirmation" | null;
 
 export function OperatorDashboard() {
   const router = useRouter();
   const isClient = useIsClient();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<
     "overview" | "kandang" | "daily" | "reports" | "news" | "devices" | "prediction"
   >("overview");
@@ -204,6 +206,7 @@ export function OperatorDashboard() {
   const [predictionResult, setPredictionResult] = useState<number | null>(null);
 
   const [modalMode, setModalMode] = useState<ModalMode>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ type: "kandang" | "daily" | "device"; id: string } | null>(null);
   const [error, setError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -309,20 +312,48 @@ export function OperatorDashboard() {
       await loadHistoryAndPredictions(); // Refresh history
       setModalMode(null);
       setSelectedKandang(null);
+      showToast("Data kandang berhasil disimpan", "success");
     } catch (err) {
       setError("Gagal menyimpan data kandang");
+      showToast("Gagal menyimpan data kandang", "error");
       console.error(err);
     }
   };
 
-  const handleDeleteKandang = async (kandangId: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus kandang ini?")) {
-      await deleteKandang(kandangId);
-      await loadKandangs();
-      if (selectedKandang?.id === kandangId) {
-        setModalMode(null);
-        setSelectedKandang(null);
+  const handleDeleteKandang = (kandangId: string) => {
+    setItemToDelete({ type: "kandang", id: kandangId });
+    setModalMode("delete-confirmation");
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      if (itemToDelete.type === "kandang") {
+        await deleteKandang(itemToDelete.id);
+        await loadKandangs();
+        if (selectedKandang?.id === itemToDelete.id) {
+          setSelectedKandang(null);
+        }
+        showToast("Kandang berhasil dihapus", "success");
+      } else if (itemToDelete.type === "daily") {
+        deleteDailyRecord(itemToDelete.id);
+        loadDailyRecords();
+        if (selectedRecord?.id === itemToDelete.id) {
+          setSelectedRecord(null);
+        }
+        showToast("Catatan harian berhasil dihapus", "success");
+      } else if (itemToDelete.type === "device") {
+        deleteDevice(itemToDelete.id);
+        loadDevices();
+        showToast("Perangkat berhasil dihapus", "success");
       }
+    } catch (error) {
+      console.error(error);
+      showToast("Gagal menghapus item", "error");
+    } finally {
+      setModalMode(null);
+      setItemToDelete(null);
     }
   };
 
@@ -386,17 +417,12 @@ export function OperatorDashboard() {
     loadDailyRecords();
     setModalMode(null);
     setSelectedRecord(null);
+    showToast("Data harian berhasil disimpan", "success");
   };
 
   const handleDeleteDailyRecord = (recordId: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus catatan ini?")) {
-      deleteDailyRecord(recordId);
-      loadDailyRecords();
-      if (selectedRecord?.id === recordId) {
-        setModalMode(null);
-        setSelectedRecord(null);
-      }
-    }
+    setItemToDelete({ type: "daily", id: recordId });
+    setModalMode("delete-confirmation");
   };
 
   // Device CRUD
@@ -430,6 +456,7 @@ export function OperatorDashboard() {
 
     loadDevices();
     setModalMode(null);
+    showToast("Perangkat berhasil ditambahkan", "success");
   };
 
   const handleToggleDeviceStatus = (device: Device) => {
@@ -1046,7 +1073,10 @@ export function OperatorDashboard() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDeleteDevice(device.id)}
+                        onClick={() => {
+                          setItemToDelete({ type: "device", id: device.id });
+                          setModalMode("delete-confirmation");
+                        }}
                         className="rounded-lg border border-slate-200 px-3 py-2 text-slate-600 hover:bg-slate-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -1703,8 +1733,46 @@ export function OperatorDashboard() {
             </div>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        {modalMode === "delete-confirmation" && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+              <div className="mb-4 flex items-center gap-3 text-red-600">
+                <div className="rounded-full bg-red-100 p-2">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#001B34]">
+                  Konfirmasi Hapus
+                </h3>
+              </div>
+              <p className="mb-6 text-slate-600">
+                Apakah Anda yakin ingin menghapus item ini? Tindakan ini tidak dapat dibatalkan.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalMode(null);
+                    setItemToDelete(null);
+                  }}
+                  className="rounded-lg border border-slate-200 px-4 py-2 text-slate-600 hover:bg-slate-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                >
+                  Hapus
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div >
+    </div>
   );
 }
 
