@@ -30,12 +30,14 @@ import {
   Newspaper,
   ShoppingCart,
   CheckCircle,
-  Truck
+  Truck,
+  Package
 } from "lucide-react";
 import { getUsers, createUser, updateUser, deleteUser } from "@/actions/users";
 import { getAllOrders, updateOrderStatus } from "@/actions/admin";
 import { logout } from "@/actions/auth";
 import { NewsManagement } from "./news-management";
+import { ProductManagement } from "./product-management";
 import { setCurrentUser, type User } from "@/utils/auth";
 import { useToast } from "@/components/ui/toast-provider";
 
@@ -43,7 +45,7 @@ type ModalMode = "create" | "edit" | "view" | null;
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "orders" | "news" | "sensors" | "system" | "logs"
+    "overview" | "users" | "orders" | "products" | "news" | "sensors" | "system" | "logs"
   >("overview");
 
   // User management state
@@ -397,6 +399,7 @@ export function AdminDashboard() {
               { id: "overview", label: "Beranda", icon: Activity },
               { id: "users", label: "Kelola Pengguna", icon: Users },
               { id: "orders", label: "Kelola Pesanan", icon: ShoppingCart },
+              { id: "products", label: "Kelola Produk", icon: Package },
               { id: "news", label: "Kelola Berita", icon: Newspaper },
               { id: "sensors", label: "Konfigurasi Sensor", icon: Wifi },
               { id: "system", label: "Pengaturan Sistem", icon: Settings },
@@ -455,6 +458,7 @@ export function AdminDashboard() {
                   {activeTab === "overview" && "Beranda"}
                   {activeTab === "users" && "Kelola Pengguna"}
                   {activeTab === "orders" && "Kelola Pesanan"}
+                  {activeTab === "products" && "Kelola Produk"}
                   {activeTab === "news" && "Kelola Berita"}
                   {activeTab === "sensors" && "Konfigurasi Sensor"}
                   {activeTab === "system" && "Pengaturan Sistem"}
@@ -464,6 +468,7 @@ export function AdminDashboard() {
                   {activeTab === "overview" && "Ringkasan sistem dan aktivitas"}
                   {activeTab === "users" && "Atur dan pantau seluruh akun pengguna sistem"}
                   {activeTab === "orders" && "Kelola dan pantau pesanan pelanggan"}
+                  {activeTab === "products" && "Atur katalog produk, harga, dan stok"}
                   {activeTab === "news" && "Kelola artikel berita dan publikasi"}
                   {activeTab === "sensors" && "Kelola dan konfigurasi sensor IoT"}
                   {activeTab === "system" && "Konfigurasi dan pengaturan sistem Poultrigo"}
@@ -859,6 +864,8 @@ export function AdminDashboard() {
               </div>
             </div>
           )}
+
+          {activeTab === "products" && <ProductManagement />}
 
           {activeTab === "news" && <NewsManagement />}
 
