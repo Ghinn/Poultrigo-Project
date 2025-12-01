@@ -17,10 +17,8 @@ import {
   Eye,
   EyeOff,
   RefreshCw,
-  Terminal,
   Cpu,
   HardDrive,
-  Wifi,
   X,
   Mail,
   Lock,
@@ -45,7 +43,7 @@ type ModalMode = "create" | "edit" | "view" | null;
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "orders" | "products" | "news" | "sensors" | "system" | "logs"
+    "overview" | "users" | "orders" | "products" | "news"
   >("overview");
 
   // User management state
@@ -401,9 +399,6 @@ export function AdminDashboard() {
               { id: "orders", label: "Kelola Pesanan", icon: ShoppingCart },
               { id: "products", label: "Kelola Produk", icon: Package },
               { id: "news", label: "Kelola Berita", icon: Newspaper },
-              { id: "sensors", label: "Konfigurasi Sensor", icon: Wifi },
-              { id: "system", label: "Pengaturan Sistem", icon: Settings },
-              { id: "logs", label: "Log Sistem", icon: Terminal },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -460,9 +455,6 @@ export function AdminDashboard() {
                   {activeTab === "orders" && "Kelola Pesanan"}
                   {activeTab === "products" && "Kelola Produk"}
                   {activeTab === "news" && "Kelola Berita"}
-                  {activeTab === "sensors" && "Konfigurasi Sensor"}
-                  {activeTab === "system" && "Pengaturan Sistem"}
-                  {activeTab === "logs" && "Log Sistem"}
                 </h1>
                 <p className="hidden text-xs text-slate-500 sm:block sm:text-sm">
                   {activeTab === "overview" && "Ringkasan sistem dan aktivitas"}
@@ -470,9 +462,6 @@ export function AdminDashboard() {
                   {activeTab === "orders" && "Kelola dan pantau pesanan pelanggan"}
                   {activeTab === "products" && "Atur katalog produk, harga, dan stok"}
                   {activeTab === "news" && "Kelola artikel berita dan publikasi"}
-                  {activeTab === "sensors" && "Kelola dan konfigurasi sensor IoT"}
-                  {activeTab === "system" && "Konfigurasi dan pengaturan sistem Poultrigo"}
-                  {activeTab === "logs" && "Pemantauan aktivitas sistem secara real-time"}
                 </p>
               </div>
             </div>
@@ -541,7 +530,7 @@ export function AdminDashboard() {
                       {
                         label: "Lalu Lintas Jaringan",
                         value: 71,
-                        icon: Wifi,
+                        icon: Activity,
                         color: "bg-orange-500",
                       },
                     ].map((metric) => (
@@ -869,136 +858,6 @@ export function AdminDashboard() {
 
           {activeTab === "news" && <NewsManagement />}
 
-          {activeTab === "sensors" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-end">
-                <button
-                  type="button"
-                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-white transition-all hover:shadow-lg"
-                >
-                  <Plus className="h-5 w-5" />
-                  Tambah Sensor
-                </button>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {sensors.map((sensor) => (
-                  <div
-                    key={sensor.id}
-                    className="rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg"
-                  >
-                    <div className="mb-4 flex items-start justify-between">
-                      <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-lg ${sensor.status === "Online"
-                          ? "bg-green-100"
-                          : sensor.status === "Warning"
-                            ? "bg-orange-100"
-                            : "bg-red-100"
-                          }`}
-                      >
-                        <Activity
-                          className={`h-5 w-5 ${sensor.status === "Online"
-                            ? "text-green-600"
-                            : sensor.status === "Warning"
-                              ? "text-orange-600"
-                              : "text-red-600"
-                            }`}
-                        />
-                      </div>
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs ${sensor.status === "Online"
-                          ? "bg-green-100 text-green-700"
-                          : sensor.status === "Warning"
-                            ? "bg-orange-100 text-orange-700"
-                            : "bg-red-100 text-red-700"
-                          }`}
-                      >
-                        {sensor.status}
-                      </span>
-                    </div>
-                    <div className="mb-1 text-sm text-slate-500">{sensor.id}</div>
-                    <div className="mb-1 text-[#001B34]">{sensor.type}</div>
-                    <div className="mb-3 text-sm text-slate-600">
-                      {sensor.location}
-                    </div>
-                    <div className="mb-2 text-2xl text-[#001B34]">
-                      {sensor.value}
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      Diperbarui {sensor.lastUpdate}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === "system" && (
-            <div className="space-y-6">
-
-              <div className="grid gap-6 lg:grid-cols-2">
-                {/* Pengaturan Umum */}
-                <div className="rounded-xl border border-slate-200 bg-white p-6">
-                  <div className="mb-6 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                      <Settings className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-[#001B34]">
-                        Pengaturan Umum
-                      </h3>
-                      <p className="text-sm text-slate-500">
-                        Konfigurasi dasar sistem
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-                      <div>
-                        <div className="font-medium text-[#001B34]">Nama Sistem</div>
-                        <div className="text-sm text-slate-500">Poultrigo IoT Platform</div>
-                      </div>
-                      <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-                      <div>
-                        <div className="font-medium text-[#001B34]">Zona Waktu</div>
-                        <div className="text-sm text-slate-500">Asia/Jakarta (WIB)</div>
-                      </div>
-                      <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-                      <div>
-                        <div className="font-medium text-[#001B34]">Bahasa Default</div>
-                        <div className="text-sm text-slate-500">Bahasa Indonesia</div>
-                      </div>
-                      <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "logs" && (
-            <div className="space-y-6">
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
-                <h3 className="mb-6 text-lg text-[#001B34]">Log Aktivitas Sistem</h3>
-                <div className="space-y-4">
-                  {/* Log items would go here */}
-                  <div className="text-center text-slate-500 py-8">
-                    Log sistem akan muncul di sini
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Modal */}
