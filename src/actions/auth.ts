@@ -10,26 +10,25 @@ import { redirect } from 'next/navigation'
 const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET || 'dev-secret-key')
 
 export async function login(prevState: { error?: string } | null, formData: FormData) {
-    const username = formData.get('username') as string
+    const email = formData.get('email') as string
     const password = formData.get('password') as string
 
-    if (!username || !password) {
+    if (!email || !password) {
         return { error: 'Mohon isi semua kolom.' }
     }
 
     try {
         await dbConnect()
-        // Find by name (username) instead of email
-        const user = await User.findOne({ name: username })
+        const user = await User.findOne({ email })
 
         if (!user) {
-            return { error: 'Username atau kata sandi salah.' }
+            return { error: 'Email atau kata sandi salah.' }
         }
 
         const isMatch = await bcrypt.compare(password, user.password)
 
         if (!isMatch) {
-            return { error: 'Username atau kata sandi salah.' }
+            return { error: 'Email atau kata sandi salah.' }
         }
 
         // Update last login
