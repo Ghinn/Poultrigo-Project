@@ -38,8 +38,20 @@ def predict():
         # For now, assuming the model accepts a list of values or a 2D array
         # You might need to adjust this part based on how you trained the model
         
-        # Generic handling: convert values to list
-        features = [list(data.values())]
+        # Explicitly extract features in the correct order matching training data:
+        # 1. Umur (Hari) -> age
+        # 2. Gender -> gender
+        # 3. Populasi -> population
+        # 4. Pakan Kemaren (kg) -> feedYesterday
+        # 5. Sisa Pakan (kg) -> leftover
+        
+        features = [[
+            float(data['age']),
+            float(data['gender']),
+            float(data['population']),
+            float(data['feedYesterday']),
+            float(data['leftover'])
+        ]]
         
         prediction = model.predict(features)
         
