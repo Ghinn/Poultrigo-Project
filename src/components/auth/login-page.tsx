@@ -11,6 +11,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
+import { setCurrentUser } from "@/utils/auth";
 import { login } from "@/actions/auth";
 
 export function LoginPage() {
@@ -44,6 +45,15 @@ export function LoginPage() {
 
     if (result?.error) {
       setError(result.error);
+    } else if (result?.success && result?.user) {
+      // Set user in local storage
+      setCurrentUser(result.user);
+
+      // Redirect based on role
+      if (result.user.role === 'admin') router.push('/admin');
+      else if (result.user.role === 'operator') router.push('/operator');
+      else if (result.user.role === 'guest') router.push('/guest');
+      else router.push('/');
     }
   };
 

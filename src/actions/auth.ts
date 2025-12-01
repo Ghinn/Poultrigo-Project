@@ -55,16 +55,20 @@ export async function login(prevState: { error?: string } | null, formData: Form
             path: '/',
         })
 
-        // Redirect based on role
-        if (user.role === 'admin') redirect('/admin')
-        else if (user.role === 'operator') redirect('/operator')
-        else if (user.role === 'guest') redirect('/guest')
-        else redirect('/')
+        // Return user data instead of redirecting
+        return {
+            success: true,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                createdAt: user.createdAt.toISOString(),
+                last_login: user.last_login?.toISOString()
+            }
+        }
 
     } catch (err) {
-        if ((err as Error).message === 'NEXT_REDIRECT') {
-            throw err
-        }
         console.error('Login error:', err)
         return { error: `System error: ${(err as Error).message}` }
     }
