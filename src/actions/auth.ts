@@ -63,8 +63,8 @@ export async function login(prevState: { error?: string } | null, formData: Form
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                createdAt: user.createdAt.toISOString(),
-                last_login: user.last_login?.toISOString()
+                createdAt: user.created_at ? new Date(user.created_at).toISOString() : new Date().toISOString(),
+                last_login: user.last_login ? new Date(user.last_login).toISOString() : undefined
             }
         }
 
