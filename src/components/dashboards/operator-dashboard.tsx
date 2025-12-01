@@ -1137,7 +1137,7 @@ export function OperatorDashboard() {
                             });
                           }
                         }}
-                        className="w-full rounded-lg border border-slate-200 px-4 py-2.5 focus:border-orange-500 focus:outline-none"
+                        className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-orange-500 focus:outline-none"
                       >
                         <option value="">-- Pilih Kandang --</option>
                         {kandangs.map(k => (
@@ -1165,7 +1165,7 @@ export function OperatorDashboard() {
                         <select
                           value={predictionForm.gender}
                           onChange={(e) => setPredictionForm({ ...predictionForm, gender: e.target.value as any })}
-                          className="w-full rounded-lg border border-slate-200 px-4 py-2.5 focus:border-orange-500 focus:outline-none"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-orange-500 focus:outline-none"
                         >
                           <option value="Jantan">Jantan</option>
                           <option value="Betina">Betina</option>
@@ -1182,7 +1182,7 @@ export function OperatorDashboard() {
                           type="number"
                           value={predictionForm.population}
                           onChange={(e) => setPredictionForm({ ...predictionForm, population: parseInt(e.target.value) || 0 })}
-                          className="w-full rounded-lg border border-slate-200 px-4 py-2.5 focus:border-orange-500 focus:outline-none"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-orange-500 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -1193,7 +1193,7 @@ export function OperatorDashboard() {
                           type="number"
                           value={predictionForm.feedYesterday}
                           onChange={(e) => setPredictionForm({ ...predictionForm, feedYesterday: parseFloat(e.target.value) || 0 })}
-                          className="w-full rounded-lg border border-slate-200 px-4 py-2.5 focus:border-orange-500 focus:outline-none"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-orange-500 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -1206,7 +1206,7 @@ export function OperatorDashboard() {
                         type="number"
                         value={predictionForm.leftover}
                         onChange={(e) => setPredictionForm({ ...predictionForm, leftover: parseFloat(e.target.value) || 0 })}
-                        className="w-full rounded-lg border border-slate-200 px-4 py-2.5 focus:border-orange-500 focus:outline-none"
+                        className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-orange-500 focus:outline-none"
                       />
                     </div>
 
