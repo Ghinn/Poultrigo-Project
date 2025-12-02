@@ -1283,21 +1283,7 @@ export function OperatorDashboard() {
                     )}
                   </div>
 
-                  <div className="rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 p-6 text-white">
-                    <div className="mb-4 flex items-center gap-3">
-                      <div className="rounded-lg bg-white/10 p-2">
-                        <Cpu className="h-6 w-6 text-orange-400" />
-                      </div>
-                      <div>
-                        <div className="font-medium">Info Model AI</div>
-                        <div className="text-xs text-slate-400">v1.0.2 (Random Forest)</div>
-                      </div>
-                    </div>
-                    <p className="text-sm text-slate-300">
-                      Model prediksi menggunakan data historis 30 hari terakhir dengan akurasi rata-rata 94%.
-                      Faktor cuaca dan kelembaban juga diperhitungkan.
-                    </p>
-                  </div>
+
                 </div>
               </div>
             </div>
