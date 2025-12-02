@@ -1709,30 +1709,11 @@ export function OperatorDashboard() {
                     onChange={(e) =>
                       setDeviceFormData({ ...deviceFormData, name: e.target.value })
                     }
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-orange-500 focus:outline-none"
                     placeholder="Contoh: Robot Pakan A1"
                   />
                 </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">
-                    Tipe Perangkat
-                  </label>
-                  <select
-                    value={deviceFormData.type}
-                    onChange={(e) =>
-                      setDeviceFormData({
-                        ...deviceFormData,
-                        type: e.target.value as any,
-                      })
-                    }
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none"
-                  >
-                    <option value="Feeder">Feeder (Pakan)</option>
-                    <option value="Waterer">Waterer (Minum)</option>
-                    <option value="Cleaner">Cleaner (Pembersih)</option>
-                    <option value="Sensor">Sensor</option>
-                  </select>
-                </div>
+
                 <div>
                   <label className="mb-1 block text-sm font-medium text-slate-700">
                     Lokasi Kandang
@@ -1742,7 +1723,7 @@ export function OperatorDashboard() {
                     onChange={(e) =>
                       setDeviceFormData({ ...deviceFormData, kandangId: e.target.value })
                     }
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-orange-500 focus:outline-none"
                   >
                     {kandangs.map((k) => (
                       <option key={k.id} value={k.id}>
