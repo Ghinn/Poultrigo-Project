@@ -50,6 +50,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
 import useIsClient from "@/hooks/use-is-client";
 import {
@@ -525,7 +527,35 @@ export function OperatorDashboard() {
   };
 
   const handlePrintReport = () => {
-    window.print();
+    const doc = new jsPDF();
+
+    // Add Title
+    doc.setFontSize(18);
+    doc.text("Laporan Riwayat Prediksi Pakan", 14, 20);
+    doc.setFontSize(11);
+    doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 14, 28);
+
+    // Prepare table data
+    const tableColumn = ["Tanggal", "Kandang", "Populasi", "Sisa Pakan", "Hasil Prediksi"];
+    const tableRows = predictions.map((p) => [
+      new Date(p.date).toLocaleDateString("id-ID"),
+      p.kandangName,
+      p.inputs.population.toLocaleString(),
+      `${p.inputs.leftover} kg`,
+      `${p.result} kg`,
+    ]);
+
+    // Generate table
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      headStyles: { fillColor: [249, 115, 22] }, // Orange-500
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    });
+
+    // Save PDF
+    doc.save("laporan-prediksi-pakan.pdf");
   };
 
   const handleCloseModal = () => {
@@ -1281,8 +1311,8 @@ export function OperatorDashboard() {
                   onClick={handlePrintReport}
                   className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50"
                 >
-                  <Printer className="h-4 w-4" />
-                  Cetak / Export PDF
+                  <Download className="h-4 w-4" />
+                  Download PDF
                 </button>
               </div>
 
