@@ -95,7 +95,7 @@ export async function addToCart(prevState: { error?: string; success?: string } 
                 quantity
             })
         }
-        revalidatePath('/guest')
+        revalidatePath('/guest', 'page')
         return { success: 'Item added to cart!' }
     } catch (err) {
         console.error(err)
@@ -144,20 +144,34 @@ export async function updateCart(prevState: { error?: string; success?: string }
 
     try {
         await dbConnect()
+        console.log(`[updateCart] Updating item ${cartItemId} to qty ${quantity} for user ${userId}`)
+
         const cartItem = await CartItem.findOne({ _id: cartItemId, user_id: userId }).populate('product_id')
 
-        if (!cartItem) return { error: 'Cart item not found.' }
+        if (!cartItem) {
+            console.error('[updateCart] Item not found')
+            return { error: 'Cart item not found.' }
+        }
 
         const product = cartItem.product_id
-        if (quantity > product.stock) return { error: `Not enough stock. Available: ${product.stock} pcs` }
+        if (!product) {
+            console.error('[updateCart] Product not found')
+            return { error: 'Product not found.' }
+        }
+
+        if (quantity > product.stock) {
+            console.warn(`[updateCart] Not enough stock. Req: ${quantity}, Avail: ${product.stock}`)
+            return { error: `Not enough stock. Available: ${product.stock} pcs` }
+        }
 
         cartItem.quantity = quantity
         await cartItem.save()
+        console.log('[updateCart] Success')
 
-        revalidatePath('/guest')
+        revalidatePath('/guest', 'page')
         return { success: 'Cart updated.' }
     } catch (err) {
-        console.error(err)
+        console.error('[updateCart] Error:', err)
         return { error: 'Error updating cart.' }
     }
 }
@@ -169,7 +183,7 @@ export async function removeFromCart(id: string) {
     try {
         await dbConnect()
         await CartItem.deleteOne({ _id: id, user_id: userId })
-        revalidatePath('/guest')
+        revalidatePath('/guest', 'page')
         return { success: 'Item removed.' }
     } catch (err) {
         console.error(err)
