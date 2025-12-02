@@ -12,14 +12,14 @@ import {
   Shield,
   Menu,
   X,
-  Newspaper,
+
   Calendar,
   Eye,
   Tag,
   ChevronDown,
 } from "lucide-react";
 import ImageWithFallback from "@/components/shared/image-with-fallback";
-import { getPublishedNews } from "@/utils/news";
+
 
 const featureCards = [
   {
@@ -198,15 +198,13 @@ export function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  const [latestNews, setLatestNews] = useState<any[]>([]);
+
   const [modelViewerReady, setModelViewerReady] = useState(false);
   const [authMenuOpen, setAuthMenuOpen] = useState(false);
   const [mobileAuthOpen, setMobileAuthOpen] = useState(false);
   const authMenuRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    setLatestNews(getPublishedNews().slice(0, 3));
-  }, []);
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -861,114 +859,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* Latest News Section */}
-        {latestNews.length > 0 && (
-          <section id="berita" className="px-4 py-12 sm:px-6 sm:py-16">
-            <div className="mx-auto max-w-7xl">
-              <div className="mb-8 text-center">
-                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-orange-600 sm:text-sm">
-                  <span className="h-0.5 w-8 bg-orange-600"></span>
-                  Berita & Artikel
-                </div>
-                <h3 className="mt-3 text-2xl font-semibold text-[#001B34] sm:mt-4 sm:text-3xl">
-                  Berita Terbaru dari Poultrigo
-                </h3>
-                <p className="mt-2 text-sm text-slate-600 sm:text-base">
-                  Dapatkan insight terbaru tentang teknologi peternakan, tips praktis, dan update sistem
-                </p>
-              </div>
 
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {latestNews.map((article, idx) => (
-                  <article
-                    key={article.id}
-                    onClick={() => router.push(`/news/${article.id}`)}
-                    className="group cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:border-orange-300 hover:shadow-lg"
-                  >
-                    {article.featuredImage && (
-                      <div className="relative h-48 w-full overflow-hidden sm:h-52">
-                        <Image
-                          src={article.featuredImage}
-                          alt={article.title}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
-                        <div className="absolute left-3 top-3">
-                          <span
-                            className={`rounded-full border px-2.5 py-1 text-xs font-semibold backdrop-blur-sm ${article.category === "Teknologi"
-                              ? "bg-blue-500/20 text-blue-700 border-blue-300"
-                              : article.category === "Tips"
-                                ? "bg-green-500/20 text-green-700 border-green-300"
-                                : article.category === "Berita"
-                                  ? "bg-purple-500/20 text-purple-700 border-purple-300"
-                                  : article.category === "Update"
-                                    ? "bg-orange-500/20 text-orange-700 border-orange-300"
-                                    : "bg-indigo-500/20 text-indigo-700 border-indigo-300"
-                              }`}
-                          >
-                            {article.category}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    <div className="p-5 sm:p-6">
-                      {!article.featuredImage && (
-                        <div className="mb-3">
-                          <span
-                            className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${article.category === "Teknologi"
-                              ? "bg-blue-500/10 text-blue-700 border-blue-200"
-                              : article.category === "Tips"
-                                ? "bg-green-500/10 text-green-700 border-green-200"
-                                : article.category === "Berita"
-                                  ? "bg-purple-500/10 text-purple-700 border-purple-200"
-                                  : article.category === "Update"
-                                    ? "bg-orange-500/10 text-orange-700 border-orange-200"
-                                    : "bg-indigo-500/10 text-indigo-700 border-indigo-200"
-                              }`}
-                          >
-                            {article.category}
-                          </span>
-                        </div>
-                      )}
-                      <h4 className="mb-2 line-clamp-2 text-lg font-bold leading-snug text-[#001B34] transition-colors group-hover:text-orange-600 sm:text-xl">
-                        {article.title}
-                      </h4>
-                      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-slate-600 sm:text-base">
-                        {article.excerpt}
-                      </p>
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs text-slate-500 sm:text-sm">
-                        <span className="flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {new Date(article.publishedAt).toLocaleDateString("id-ID", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
-                        <span className="flex items-center gap-1.5 font-medium">
-                          <Eye className="h-3.5 w-3.5" />
-                          {article.views}
-                        </span>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-
-              <div className="mt-8 text-center">
-                <button
-                  type="button"
-                  onClick={() => router.push("/news")}
-                  className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-orange-600 hover:shadow-lg hover:scale-105"
-                >
-                  <Newspaper className="h-4 w-4" />
-                  Lihat Semua Berita
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* Tim Pengembang */}
         <section id="tim" className="bg-slate-100 px-4 py-12 sm:px-6 sm:py-16">
